@@ -161,8 +161,9 @@ body::before {
 }
 .slot .star { display: none; position: absolute; top: 3px; left: 6px; font-size: 13px; line-height: 1; color: var(--gold); text-shadow: 0 0 6px rgba(0, 0, 0, .8); }
 .slot.fav .star { display: block; }
-.slot.fav { border-color: color-mix(in srgb, var(--gold) 70%, transparent); }
-.slot.fav.now { border-color: var(--gold); }
+.slot.fav { border: 2px solid var(--gold); box-shadow: 0 0 0 1px rgba(242, 193, 78, .35), 0 0 16px rgba(242, 193, 78, .45), inset 0 0 14px rgba(0, 0, 0, .6); }
+.slot.fav.now { box-shadow: 0 0 0 1px var(--gold), 0 0 26px rgba(242, 193, 78, .7), inset 0 0 14px rgba(0, 0, 0, .4); }
+.slot.fav.past { box-shadow: none; }
 .nowline { position: absolute; left: calc(var(--rail) - 6px); right: calc(var(--rail) - 6px); height: 0; border-top: 2px solid var(--blood); z-index: 3; pointer-events: none; box-shadow: 0 0 10px var(--blood); }
 .nowline::before { content: ""; position: absolute; left: -5px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--blood); }
 
@@ -195,9 +196,22 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
 .favbtn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
 
 /* Favourites list */
-.favs { display: grid; gap: 8px; }
-.favs h2 { margin: 0; font-size: 13px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
-.favs ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.favs { display: block; }
+.favs summary {
+  position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; cursor: pointer; list-style: none;
+  padding-right: 34px !important;
+  font-size: 13px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
+  padding: 8px 12px; border: 1px solid rgba(242, 193, 78, .4); border-radius: 4px; background: rgba(0, 0, 0, .3);
+}
+.favs summary::-webkit-details-marker { display: none; }
+.favs summary .ttl { white-space: nowrap; }
+.favs summary::after { content: ""; position: absolute; right: 14px; top: 13px; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-2px); transition: transform .2s; }
+.favs[open] summary::after { transform: rotate(-135deg) translateY(-2px); }
+.favs summary:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+.favs .count { color: var(--muted); letter-spacing: .06em; }
+.favs .live-now { flex-basis: 100%; color: var(--ink); letter-spacing: .04em; text-transform: none; font-size: 14px; }
+.favs .live-now:empty { display: none; }
+.favs ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
 .favs li button {
   width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
   font: inherit; color: var(--ink); text-align: left; cursor: pointer;
@@ -269,10 +283,10 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
     <div class="live" id="live"></div>
   </section>
 
-  <section class="favs" id="favs" aria-labelledby="favsTitle" hidden>
-    <h2 id="favsTitle">★ Mes favoris</h2>
+  <details class="favs" id="favs" hidden>
+    <summary><span class="ttl">★ Mes favoris <span class="count" id="favCount"></span></span><span class="live-now" id="favLive"></span></summary>
     <ul id="favList"></ul>
-  </section>
+  </details>
 
   <section class="tt" aria-label="Timetable">
     <div class="heads" aria-hidden="true">
@@ -448,6 +462,10 @@ function toggleFav(s) {
 function renderFavs(m) {
   const list = slots.filter(isFav).sort((a, b) => a.s - b.s || a.stage.localeCompare(b.stage));
   document.getElementById("favs").hidden = !list.length;
+  document.getElementById("favCount").textContent = `(${list.length})`;
+  // Folded by default: the summary still says when a favourite is on stage.
+  const playing = list.filter(s => status(s, m) === "now").map(s => s.name);
+  document.getElementById("favLive").textContent = playing.length ? `En direct : ${playing.join(", ")}` : "";
   const ul = document.getElementById("favList");
   ul.innerHTML = "";
   list.forEach(s => {
