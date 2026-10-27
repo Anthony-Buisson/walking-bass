@@ -194,6 +194,10 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
 }
 .favbtn[aria-pressed="true"] { color: #1d1503; background: var(--gold); }
 .favbtn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+.btn {
+  justify-self: end; font: inherit; font-size: 14px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer;
+}
 
 
 /* Install call to action */
@@ -215,6 +219,11 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
 
 /* Footer tools */
 footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); font-size: 12px; letter-spacing: .06em; text-align: center; }
+footer details { width: 100%; max-width: 420px; }
+footer summary { cursor: pointer; text-transform: uppercase; letter-spacing: .14em; }
+footer summary.on { color: var(--blood); }
+.simrow { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.simrow input { font: inherit; font-size: 15px; color: var(--ink); background: #151815; border: 1px solid var(--line); padding: 6px 8px; border-radius: 4px; }
 [hidden] { display: none !important; }
 
 @media (max-width: 420px) {
@@ -266,6 +275,14 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
 
   <footer>
     <div id="offline">Consultable hors ligne une fois installée.</div>
+    <details id="simbox">
+      <summary id="simLabel">Tester une autre heure</summary>
+      <div class="simrow">
+        <label for="simTime">Heure simulée</label>
+        <input id="simTime" type="time" step="60">
+        <button class="btn" id="simReset" type="button">Heure réelle</button>
+      </div>
+    </details>
   </footer>
 </div>
 
@@ -361,8 +378,10 @@ const offset = hhmm => { const [h, m] = hhmm.split(":").map(Number); return ((h 
 const fmt = hhmm => hhmm.replace(":", "h");
 const slots = SLOTS.map(([stage, name, start, end], i) => ({ id: i, stage, name, start, end, s: offset(start), e: offset(end) }));
 
-// --- time source: the device clock ---
+// --- time source: the device clock, or a time picked in the footer to try the page ---
+let simulated = null;
 function nowMinutes() {
+  if (simulated) return offset(simulated);
   const d = new Date();
   return offset(`${d.getHours()}:${d.getMinutes()}`) + d.getSeconds() / 60;
 }
@@ -509,6 +528,19 @@ function openArtist(s) {
   if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
 }
 dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+
+// --- time simulation (footer) ---
+const simInput = document.getElementById("simTime");
+const simLabel = document.getElementById("simLabel");
+function setSim(v) {
+  simulated = v || null;
+  simInput.value = v || "";
+  simLabel.textContent = simulated ? `Heure simulée : ${fmt(simulated)}` : "Tester une autre heure";
+  simLabel.classList.toggle("on", !!simulated);
+  render();
+}
+simInput.addEventListener("input", () => setSim(simInput.value));
+document.getElementById("simReset").addEventListener("click", () => setSim(null));
 
 buildGrid();
 render();
