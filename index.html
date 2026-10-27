@@ -28,7 +28,8 @@
   --station: #c8312a;
   --station-deep: #3a1110;
   --blood: #ff5426;
-  --gold: #f2c14e;
+  --fav: #f2c14e;       /* favourites: icon, border, glow, button */
+  --fav-ink: #1d1503;   /* text on a filled favourite button */
   --line: rgba(236, 230, 212, .28);
   --font-title: "Creepster", "Impact", fantasy;
   --font-ui: "Oswald", "Arial Narrow", "Roboto Condensed", sans-serif;
@@ -160,13 +161,13 @@ body::before {
   font-size: 10px; letter-spacing: .12em; background: var(--blood); color: #1a0402; border-radius: 3px;
 }
 .skull { width: 1em; height: 1em; fill: currentColor; vertical-align: -.12em; flex: none; }
-.slot .star { display: none; position: absolute; top: 4px; left: 6px; font-size: 15px; line-height: 0; color: var(--gold); filter: drop-shadow(0 0 4px rgba(0, 0, 0, .9)); }
+.slot .star { display: none; position: absolute; top: 4px; left: 6px; font-size: 15px; line-height: 0; color: var(--fav); filter: drop-shadow(0 0 4px rgba(0, 0, 0, .9)); }
 .favbtn { display: inline-flex; align-items: center; gap: 8px; }
 .favbtn .skull { font-size: 18px; }
-.live-card .n .skull { color: var(--gold); margin-right: .25em; }
+.live-card .n .skull { color: var(--fav); margin-right: .25em; }
 .slot.fav .star { display: block; }
-.slot.fav { border: 2px solid var(--gold); box-shadow: 0 0 0 1px rgba(242, 193, 78, .35), 0 0 16px rgba(242, 193, 78, .45), inset 0 0 14px rgba(0, 0, 0, .6); }
-.slot.fav.now { box-shadow: 0 0 0 1px var(--gold), 0 0 26px rgba(242, 193, 78, .7), inset 0 0 14px rgba(0, 0, 0, .4); }
+.slot.fav { border: 2px solid var(--fav); box-shadow: 0 0 0 1px color-mix(in srgb, var(--fav) 35%, transparent), 0 0 16px color-mix(in srgb, var(--fav) 45%, transparent), inset 0 0 14px rgba(0, 0, 0, .6); }
+.slot.fav.now { box-shadow: 0 0 0 1px var(--fav), 0 0 26px color-mix(in srgb, var(--fav) 70%, transparent), inset 0 0 14px rgba(0, 0, 0, .4); }
 .slot.fav.past { box-shadow: none; }
 .nowline { position: absolute; left: calc(var(--rail) - 6px); right: calc(var(--rail) - 6px); height: 0; border-top: 2px solid var(--blood); z-index: 3; pointer-events: none; box-shadow: 0 0 10px var(--blood); }
 .nowline::before { content: ""; position: absolute; left: -5px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--blood); }
@@ -194,9 +195,9 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
 .sheet .actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .favbtn {
   font: inherit; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
-  color: var(--gold); background: transparent; border: 1px solid var(--gold); padding: 8px 14px; border-radius: 4px;
+  color: var(--fav); background: transparent; border: 1px solid var(--fav); padding: 8px 14px; border-radius: 4px;
 }
-.favbtn[aria-pressed="true"] { color: #1d1503; background: var(--gold); }
+.favbtn[aria-pressed="true"] { color: var(--fav-ink); background: var(--fav); }
 .favbtn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
 .btn {
   justify-self: end; font: inherit; font-size: 14px; letter-spacing: .12em; text-transform: uppercase;
