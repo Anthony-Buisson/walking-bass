@@ -48,6 +48,11 @@ body {
   background-attachment: fixed;
   -webkit-tap-highlight-color: transparent;
 }
+/* Opaque band behind the status bar so scrolled content never shows under the notch. */
+body::after {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10;
+  background: var(--bg); pointer-events: none;
+}
 body::before {
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .22; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -55,7 +60,8 @@ body::before {
 .wrap {
   position: relative; z-index: 1;
   max-width: 760px; margin: 0 auto;
-  padding-block: 18px 40px;
+  /* Installed on iPhone the status bar is translucent: keep content clear of the notch and the home bar. */
+  padding-block: calc(18px + env(safe-area-inset-top, 0px)) calc(40px + env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: grid; gap: 22px;

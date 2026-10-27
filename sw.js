@@ -1,5 +1,5 @@
 // Precache the whole app so the timetable works with no network once installed.
-const CACHE = "walking-bass-v3";
+const CACHE = "walking-bass-v4";
 const ASSETS = [
   "./",
   "index.html",
