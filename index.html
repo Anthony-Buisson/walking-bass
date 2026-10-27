@@ -28,8 +28,8 @@
   --station: #c8312a;
   --station-deep: #3a1110;
   --blood: #ff5426;
-  --fav: #6837a8;       /* favourites: icon, border, glow, button */
-  --fav-ink: #f3ecff;   /* text on a filled favourite button */
+  --fav: #b9a77c;       /* favourites: icon, border, glow, button */
+  --fav-ink: #1a150b;   /* text on a filled favourite button */
   --line: rgba(236, 230, 212, .28);
   --font-title: "Creepster", "Impact", fantasy;
   --font-ui: "Oswald", "Arial Narrow", "Roboto Condensed", sans-serif;
@@ -198,7 +198,8 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
   color: var(--fav); background: transparent; border: 1px solid var(--fav); padding: 8px 14px; border-radius: 4px;
 }
 .favbtn[aria-pressed="true"] { color: var(--fav-ink); background: var(--fav); }
-.favbtn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+.favbtn:focus-visible { outline: 2px solid var(--fav); outline-offset: 3px; }
+.sheet h2:focus { outline: none; }
 .btn {
   justify-self: end; font: inherit; font-size: 14px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer;
@@ -294,7 +295,7 @@ footer summary.on { color: var(--blood); }
 <dialog id="dlg" aria-labelledby="dlgName">
   <form method="dialog" class="sheet" id="sheet">
     <div class="stage" id="dlgStage"></div>
-    <h2 id="dlgName"></h2>
+    <h2 id="dlgName" tabindex="-1" autofocus></h2>
     <div class="when" id="dlgWhen"></div>
     <ul class="tags" id="dlgTags"></ul>
     <div class="members" id="dlgNote"></div>
