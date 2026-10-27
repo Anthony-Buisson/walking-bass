@@ -87,9 +87,6 @@ body::before {
 .meta { margin-top: 10px; color: var(--muted); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
 
 /* Clock + live panel */
-.clock { display: flex; justify-content: center; align-items: baseline; gap: 10px; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-.clock b { font-size: 26px; color: var(--ink); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
-.clock .sim { color: var(--blood); }
 .live { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .live-card {
   position: relative; border: 1px solid var(--line); padding: 12px 12px 14px; min-width: 0;
@@ -191,10 +188,6 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
 
 /* Footer tools */
 footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); font-size: 12px; letter-spacing: .06em; text-align: center; }
-footer details { width: 100%; max-width: 420px; }
-footer summary { cursor: pointer; text-transform: uppercase; letter-spacing: .14em; }
-.simrow { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 10px; flex-wrap: wrap; }
-.simrow input { font: inherit; font-size: 15px; color: var(--ink); background: #151815; border: 1px solid var(--line); padding: 6px 8px; border-radius: 4px; }
 [hidden] { display: none !important; }
 
 @media (max-width: 420px) {
@@ -220,7 +213,6 @@ footer summary { cursor: pointer; text-transform: uppercase; letter-spacing: .14
   </header>
 
   <section aria-label="En ce moment" style="display:grid;gap:12px">
-    <div class="clock" id="clockRow" hidden><span class="sim">Heure simulée</span><b id="clock">--:--</b></div>
     <div class="live" id="live"></div>
   </section>
 
@@ -243,14 +235,6 @@ footer summary { cursor: pointer; text-transform: uppercase; letter-spacing: .14
   <footer>
     <button class="btn" id="install" type="button" hidden>Installer l'appli</button>
     <div id="offline">Consultable hors ligne une fois installée.</div>
-    <details id="simbox">
-      <summary>Tester une autre heure</summary>
-      <div class="simrow">
-        <label for="simTime">Heure simulée</label>
-        <input id="simTime" type="time" step="60">
-        <button class="btn" id="simReset" type="button">Heure réelle</button>
-      </div>
-    </details>
   </footer>
 </div>
 
@@ -334,14 +318,8 @@ const offset = hhmm => { const [h, m] = hhmm.split(":").map(Number); return ((h 
 const fmt = hhmm => hhmm.replace(":", "h");
 const slots = SLOTS.map(([stage, name, start, end], i) => ({ id: i, stage, name, start, end, s: offset(start), e: offset(end) }));
 
-// --- time source: real clock, or a simulated time (footer control or #t2345 in the URL) ---
-let simulated = null;
-function readHashTime() {
-  const m = /^#t(\d{2})(\d{2})$/.exec(location.hash);
-  return m ? `${m[1]}:${m[2]}` : null;
-}
+// --- time source: the device clock ---
 function nowMinutes() {
-  if (simulated) return offset(simulated);
   const d = new Date();
   return offset(`${d.getHours()}:${d.getMinutes()}`) + d.getSeconds() / 60;
 }
@@ -390,10 +368,6 @@ function buildGrid() {
 const liveEl = document.getElementById("live");
 function render() {
   const m = nowMinutes();
-  // Only a simulated time is shown, as a reminder that the page is not on the real clock.
-  document.getElementById("clockRow").hidden = !simulated;
-  if (simulated) document.getElementById("clock").textContent = fmt(simulated);
-
   grid.querySelectorAll(".slot").forEach(el => {
     const st = status(slots[el.dataset.id], m);
     el.classList.toggle("now", st === "now");
@@ -470,29 +444,7 @@ function openArtist(s) {
 }
 dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 
-// --- simulation controls ---
-const simInput = document.getElementById("simTime");
-function setSim(v) {
-  simulated = v || null;
-  simInput.value = v || "";
-  render();
-  if (v) scrollToNow();
-}
-simInput.addEventListener("input", () => setSim(simInput.value));
-document.getElementById("simReset").addEventListener("click", () => setSim(null));
-window.addEventListener("hashchange", () => { const t = readHashTime(); if (t) setSim(t); });
-
-function scrollToNow() {
-  const m = nowMinutes();
-  if (!live(m)) return;
-  const line = document.getElementById("nowline");
-  const r = line.getBoundingClientRect();
-  if (r.top < 0 || r.bottom > innerHeight) window.scrollTo({ top: scrollY + r.top - innerHeight * .45, behavior: "smooth" });
-}
-
 buildGrid();
-const hashT = readHashTime();
-if (hashT) { simulated = hashT; simInput.value = hashT; document.getElementById("simbox").open = true; }
 render();
 setInterval(render, 20000);
 setInterval(tickCountdown, 1000);
