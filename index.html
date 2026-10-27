@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Walking Bass Timetable</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Timetable de The Walking Bass : The Last Raver, avec les artistes en train de jouer.">
+<meta name="theme-color" content="#0b0d0b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Walking Bass">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+@font-face { font-family: "Creepster"; src: url(fonts/creepster.woff2) format("woff2"); font-display: swap; }
+@font-face { font-family: "Oswald"; src: url(fonts/oswald.woff2) format("woff2"); font-weight: 200 700; font-display: swap; }
+
+/* Layout: poster-like two-stage timeline, time rails on both edges, live panel on top. Single dark look, like the flyer. */
+:root {
+  --bg: #0b0d0b;
+  --ink: #ece6d4;
+  --muted: #9a9686;
+  --arcane: #4f9e3f;
+  --arcane-deep: #17301a;
+  --station: #c8312a;
+  --station-deep: #3a1110;
+  --blood: #ff5426;
+  --line: rgba(236, 230, 212, .28);
+  --font-title: "Creepster", "Impact", fantasy;
+  --font-ui: "Oswald", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --row: 34px;
+  color-scheme: dark;
+}
+html { background: var(--bg); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  background:
+    radial-gradient(60% 55% at 0% 45%, rgba(63, 128, 50, .38), transparent 70%),
+    radial-gradient(60% 55% at 100% 45%, rgba(168, 32, 24, .42), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+  -webkit-tap-highlight-color: transparent;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .22; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap {
+  position: relative; z-index: 1;
+  max-width: 760px; margin: 0 auto;
+  padding-block: 18px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 22px;
+}
+
+/* Title */
+.title { text-align: center; line-height: .82; user-select: none; }
+.title small { display: block; font-family: var(--font-title); color: var(--blood); font-size: 18px; letter-spacing: .08em; transform: translateX(-34%) rotate(-6deg); }
+.title h1 {
+  margin: 0; font-family: var(--font-title); font-weight: 400;
+  font-size: clamp(44px, 13vw, 88px); letter-spacing: .02em;
+  background: linear-gradient(180deg, #ff8a3d 0%, #ff4a24 45%, #b5170f 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 3px 0 #2a0503) drop-shadow(0 0 18px rgba(255, 70, 30, .25));
+  text-wrap: balance;
+}
+.title .tag {
+  display: inline-block; margin-top: 8px; padding: 3px 12px 2px;
+  font-family: Georgia, "Times New Roman", serif; font-weight: 700; font-size: clamp(13px, 3.6vw, 18px);
+  color: #fff3e8; background: #a3150f; border: 2px solid #ff6a3a; letter-spacing: .03em;
+  box-shadow: 0 2px 0 #2a0503;
+}
+.meta { margin-top: 10px; color: var(--muted); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
+
+/* Clock + live panel */
+.clock { display: flex; justify-content: center; align-items: baseline; gap: 10px; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.clock b { font-size: 26px; color: var(--ink); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.clock .sim { color: var(--blood); }
+.live { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.live-card {
+  position: relative; border: 1px solid var(--line); padding: 12px 12px 14px; min-width: 0;
+  background: linear-gradient(160deg, var(--deep), rgba(0, 0, 0, .55));
+  display: grid; gap: 6px; text-align: left; color: inherit; font: inherit; cursor: pointer;
+}
+.live-card[data-stage="arcane"] { --deep: var(--arcane-deep); --c: var(--arcane); }
+.live-card[data-stage="station"] { --deep: var(--station-deep); --c: var(--station); }
+.live-card:disabled { cursor: default; }
+.live-card .k { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--c); filter: brightness(1.4); display: flex; align-items: center; gap: 6px; }
+.live-card .n { font-size: clamp(18px, 5vw, 26px); font-weight: 700; text-transform: uppercase; line-height: 1.05; overflow-wrap: anywhere; }
+.live-card .t { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 4px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--c); filter: brightness(1.3); }
+.live-card .next { font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.live-card .next b { color: var(--ink); font-weight: 500; text-transform: uppercase; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blood); box-shadow: 0 0 0 0 rgba(255, 84, 38, .7); animation: pulse 1.6s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 9px rgba(255, 84, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 84, 38, 0); } }
+.offhours { grid-column: 1 / -1; text-align: center; border: 1px dashed var(--line); padding: 14px; color: var(--muted); letter-spacing: .06em; }
+.offhours b { color: var(--ink); font-weight: 500; }
+
+/* Stage headers: brush strokes */
+.heads { display: grid; grid-template-columns: var(--rail) 1fr 1fr var(--rail); gap: 0 10px; align-items: end; }
+.brush { position: relative; height: 62px; display: grid; place-items: center; }
+.brush svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.brush span {
+  position: relative; font-family: var(--font-ui); font-weight: 700; font-style: italic;
+  font-size: clamp(22px, 6.6vw, 40px); letter-spacing: .02em; color: #f4efe2;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, .7); transform: skewX(-6deg);
+}
+
+/* Timetable grid */
+.tt { --rail: 46px; display: grid; gap: 6px; }
+.grid {
+  position: relative;
+  display: grid; grid-template-columns: var(--rail) 1fr 1fr var(--rail); grid-template-rows: repeat(22, var(--row));
+  column-gap: 10px;
+}
+.tick { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid var(--line); pointer-events: none; }
+.tick.l { right: calc(50% + 5px); left: calc(var(--rail) - 6px); }
+.tick.r { left: calc(50% + 5px); right: calc(var(--rail) - 6px); }
+.hl { position: absolute; font-size: 12px; letter-spacing: .04em; color: var(--ink); transform: translateY(-50%); font-variant-numeric: tabular-nums; pointer-events: none; }
+.hl.l { left: 0; }
+.hl.r { right: 0; text-align: right; }
+.slot {
+  margin: 4px 0; min-width: 0; position: relative;
+  display: grid; place-items: center; text-align: center; padding: 4px 8px;
+  font: inherit; font-weight: 700; font-size: clamp(13px, 3.7vw, 18px); line-height: 1.05; text-transform: uppercase; letter-spacing: .01em;
+  color: var(--ink); background: linear-gradient(180deg, var(--deep), rgba(0, 0, 0, .6));
+  border: 1.5px solid color-mix(in srgb, var(--c) 70%, transparent); border-radius: 5px;
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, .7);
+  cursor: pointer; overflow-wrap: anywhere; transition: transform .15s, opacity .3s, box-shadow .3s;
+}
+.slot[data-stage="arcane"] { --deep: rgba(30, 62, 30, .78); --c: var(--arcane); grid-column: 2; }
+.slot[data-stage="station"] { --deep: rgba(70, 18, 16, .78); --c: var(--station); grid-column: 3; }
+.slot small { font-size: .62em; font-weight: 500; }
+.slot:hover { transform: translateY(-1px); }
+.slot:focus-visible, .live-card:focus-visible, .btn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+.slot.past { opacity: .4; }
+.slot.now {
+  border-color: var(--c); border-width: 2px;
+  box-shadow: 0 0 0 1px var(--c), 0 0 22px color-mix(in srgb, var(--c) 75%, transparent), inset 0 0 14px rgba(0, 0, 0, .4);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 45%, #000), rgba(0, 0, 0, .55));
+  z-index: 2;
+}
+.slot.now::after {
+  content: "EN DIRECT"; position: absolute; top: -8px; right: 6px; padding: 1px 6px 0;
+  font-size: 10px; letter-spacing: .12em; background: var(--blood); color: #1a0402; border-radius: 3px;
+}
+.nowline { position: absolute; left: calc(var(--rail) - 6px); right: calc(var(--rail) - 6px); height: 0; border-top: 2px solid var(--blood); z-index: 3; pointer-events: none; box-shadow: 0 0 10px var(--blood); }
+.nowline::before { content: ""; position: absolute; left: -5px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--blood); }
+
+/* Dialog */
+dialog {
+  border: 1px solid var(--line); padding: 0; color: var(--ink); background: #121512;
+  width: min(440px, calc(100vw - 32px)); max-width: none; border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .7);
+}
+dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
+.sheet { display: grid; gap: 14px; padding: 20px 20px 22px; background: linear-gradient(170deg, var(--deep), transparent 70%); }
+.sheet[data-stage="arcane"] { --deep: var(--arcane-deep); --c: var(--arcane); }
+.sheet[data-stage="station"] { --deep: var(--station-deep); --c: var(--station); }
+.sheet .stage { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--c); filter: brightness(1.45); }
+.sheet h2 { margin: 0; font-size: clamp(26px, 8vw, 36px); line-height: 1; text-transform: uppercase; text-wrap: balance; }
+.sheet .when { font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sheet .when b { color: var(--ink); font-weight: 500; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.tags li {
+  padding: 5px 11px 4px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 22%, transparent); border-radius: 999px;
+}
+.sheet .members { font-size: 13px; color: var(--muted); }
+.btn {
+  justify-self: end; font: inherit; font-size: 14px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer;
+}
+
+/* Footer tools */
+footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); font-size: 12px; letter-spacing: .06em; text-align: center; }
+footer details { width: 100%; max-width: 420px; }
+footer summary { cursor: pointer; text-transform: uppercase; letter-spacing: .14em; }
+.simrow { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.simrow input { font: inherit; font-size: 15px; color: var(--ink); background: #151815; border: 1px solid var(--line); padding: 6px 8px; border-radius: 4px; }
+#install[hidden] { display: none !important; }
+
+@media (max-width: 420px) {
+  :root { --row: 32px; }
+  .tt { --rail: 38px; }
+  .hl { font-size: 10.5px; }
+  .grid, .heads { column-gap: 6px; }
+  .slot { padding: 3px 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot { animation: none; }
+  .slot { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="title">
+    <small>The</small>
+    <h1>Walking Bass</h1>
+    <div><span class="tag">THE LAST RAVER</span></div>
+    <div class="meta">Samedi 31 octobre · 18h00 – 05h00</div>
+  </header>
+
+  <section aria-label="En ce moment" style="display:grid;gap:12px">
+    <div class="clock"><span id="clockLabel">Il est</span><b id="clock">--:--</b></div>
+    <div class="live" id="live"></div>
+  </section>
+
+  <section class="tt" aria-label="Timetable">
+    <div class="heads" aria-hidden="true">
+      <span></span>
+      <div class="brush">
+        <svg viewBox="0 0 200 60" preserveAspectRatio="none"><use href="#brush" fill="#3d8a33"/></svg>
+        <span>ARCANE</span>
+      </div>
+      <div class="brush">
+        <svg viewBox="0 0 200 60" preserveAspectRatio="none"><use href="#brush" fill="#b8231c"/></svg>
+        <span>STATION</span>
+      </div>
+      <span></span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <footer>
+    <button class="btn" id="install" type="button" hidden>Installer l'appli</button>
+    <div id="offline">Consultable hors ligne une fois installée.</div>
+    <details id="simbox">
+      <summary>Tester une autre heure</summary>
+      <div class="simrow">
+        <label for="simTime">Heure simulée</label>
+        <input id="simTime" type="time" step="60">
+        <button class="btn" id="simReset" type="button">Heure réelle</button>
+      </div>
+    </details>
+  </footer>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgName">
+  <form method="dialog" class="sheet" id="sheet">
+    <div class="stage" id="dlgStage"></div>
+    <h2 id="dlgName"></h2>
+    <div class="when" id="dlgWhen"></div>
+    <ul class="tags" id="dlgTags"></ul>
+    <div class="members" id="dlgNote"></div>
+    <button class="btn" value="close">Fermer</button>
+  </form>
+</dialog>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="rough" x="-10%" y="-30%" width="120%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.9" numOctaves="3" seed="7"/>
+      <feDisplacementMap in="SourceGraphic" scale="9"/>
+    </filter>
+    <g id="brush" filter="url(#rough)">
+      <path d="M8 18 C40 8 90 12 150 9 C170 8 186 6 196 12 L190 20 L198 27 L186 33 L196 41 L182 47 C130 52 70 50 20 54 L4 50 L14 44 L2 38 L12 31 L0 24 Z"/>
+      <path d="M150 50 L198 52 L176 56 Z M2 12 L40 10 L12 16 Z" opacity=".8"/>
+    </g>
+  </defs>
+</svg>
+
+<script>
+// Timetable transcribed from the official flyer. Times are "HH:MM"; slots past midnight belong to the same night.
+const STAGES = { arcane: "Arcane", station: "Station" };
+const ARTISTS = {
+  "Tremplin": { tags: ["Scène tremplin", "Talents locaux", "Découverte"] },
+  "Insane Creatures": { tags: ["Industrial", "Dark Techno", "EBM", "Trance"] },
+  "Medusa": { tags: ["Hard Techno", "Trance"] },
+  "Mandragora": { tags: ["Psytrance", "Full-On", "Progressive Psy"] },
+  "Creeds": { tags: ["Hard Dance", "Hard Techno", "Rave"] },
+  "Vladimir Cauchemar": { tags: ["Electro", "Bass House", "Trap"] },
+  "LESSSS": { tags: ["Hard Techno", "Schranz", "Industrial Techno"] },
+  "Onlynumbers": { tags: ["Hard Techno", "Bouncy", "Hard Groove"] },
+  "Lil Texas": { tags: ["Hardcore", "Uptempo", "Hard Dance"] },
+  "Unicorn on K": { tags: ["Hard Techno", "Trance", "Rave"] },
+  "GEA": { tags: ["Hard Techno", "Techno"] },
+  "Mara": { tags: ["Hard Techno", "Hard Groove"] },
+  "AJJA": { tags: ["Psytrance", "Psychedelic", "Full-On"] },
+  "Gonzi": { tags: ["Techno", "Hard Techno"] },
+  "FLKN": { tags: ["Hard Techno", "Rave"] },
+  "Samuel Moriero": { tags: ["Hard Techno", "Industrial"] },
+  "Vortek's B2B Omaks": { tags: ["Tekno", "Hardtek", "Free Party", "Acid"], members: "Vortek's et Omaks en back to back" },
+  "Dual Damage": { tags: ["Rawstyle", "Hardstyle", "Hard Dance"] },
+  "Yoshiko": { tags: ["Hard Techno", "Hard Groove"] }
+};
+const SLOTS = [
+  ["arcane", "Tremplin", "18:00", "19:30"],
+  ["arcane", "Insane Creatures", "19:30", "20:30"],
+  ["arcane", "Medusa", "20:30", "21:30"],
+  ["arcane", "Mandragora", "21:30", "22:30"],
+  ["arcane", "Creeds", "22:30", "23:30"],
+  ["arcane", "Vladimir Cauchemar", "23:30", "01:00"],
+  ["arcane", "LESSSS", "01:00", "02:00"],
+  ["arcane", "Onlynumbers", "02:00", "03:00"],
+  ["arcane", "Lil Texas", "03:00", "04:00"],
+  ["arcane", "Unicorn on K", "04:00", "05:00"],
+  ["station", "Tremplin", "18:00", "19:30"],
+  ["station", "GEA", "19:30", "20:30"],
+  ["station", "Mara", "20:30", "21:30"],
+  ["station", "AJJA", "21:30", "22:30"],
+  ["station", "Gonzi", "22:30", "23:30"],
+  ["station", "FLKN", "23:30", "00:30"],
+  ["station", "Samuel Moriero", "00:30", "01:30"],
+  ["station", "Vortek's B2B Omaks", "01:30", "03:00"],
+  ["station", "Dual Damage", "03:00", "04:00"],
+  ["station", "Yoshiko", "04:00", "05:00"]
+];
+
+const DAY_START = 18 * 60;          // 18h00
+const SPAN = 11 * 60;               // until 05h00
+const STEP = 30;                    // one grid row = 30 min
+
+// Minutes elapsed since 18h00, wrapping past midnight (01h00 -> 420).
+const offset = hhmm => { const [h, m] = hhmm.split(":").map(Number); return ((h * 60 + m) - DAY_START + 1440) % 1440; };
+const fmt = hhmm => hhmm.replace(":", "h");
+const slots = SLOTS.map(([stage, name, start, end], i) => ({ id: i, stage, name, start, end, s: offset(start), e: offset(end) }));
+
+// --- time source: real clock, or a simulated time (footer control or #t2345 in the URL) ---
+let simulated = null;
+function readHashTime() {
+  const m = /^#t(\d{2})(\d{2})$/.exec(location.hash);
+  return m ? `${m[1]}:${m[2]}` : null;
+}
+function nowMinutes() {
+  if (simulated) return offset(simulated);
+  const d = new Date();
+  return offset(`${d.getHours()}:${d.getMinutes()}`) + d.getSeconds() / 60;
+}
+function clockText(min) {
+  const t = (DAY_START + Math.floor(min)) % 1440;
+  return `${String(Math.floor(t / 60)).padStart(2, "0")}h${String(t % 60).padStart(2, "0")}`;
+}
+const live = m => m >= 0 && m < SPAN;
+const status = (slot, m) => !live(m) ? "off" : m >= slot.e ? "past" : m >= slot.s ? "now" : "next";
+
+function untilText(mins) {
+  mins = Math.max(1, Math.round(mins));
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return h ? `${h}h${String(m).padStart(2, "0")}` : `${m} min`;
+}
+
+// --- render grid once ---
+const grid = document.getElementById("grid");
+const rowPx = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--row"));
+function buildGrid() {
+  const frag = document.createDocumentFragment();
+  const boundaries = { arcane: new Set(), station: new Set() };
+  slots.forEach(s => { boundaries[s.stage].add(s.start); boundaries[s.stage].add(s.end); });
+  for (const [stage, side] of [["arcane", "l"], ["station", "r"]]) {
+    [...boundaries[stage]].forEach(t => {
+      const pct = offset(t) / SPAN * 100;
+      const tick = document.createElement("div");
+      tick.className = `tick ${side}`; tick.style.top = pct + "%";
+      const lab = document.createElement("div");
+      lab.className = `hl ${side}`; lab.style.top = pct + "%"; lab.textContent = t.replace(":", "H");
+      frag.append(tick, lab);
+    });
+  }
+  slots.forEach(s => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "slot"; b.dataset.stage = s.stage; b.dataset.id = s.id;
+    b.style.gridRow = `${s.s / STEP + 1} / ${s.e / STEP + 1}`;
+    b.innerHTML = `<span>${s.name.replace(/ B2B /, " <small>B2B</small> ")}</span>`;
+    b.setAttribute("aria-label", `${s.name}, ${STAGES[s.stage]}, ${fmt(s.start)} à ${fmt(s.end)}`);
+    b.addEventListener("click", () => openArtist(s));
+    frag.append(b);
+  });
+  const line = document.createElement("div");
+  line.className = "nowline"; line.id = "nowline"; line.hidden = true;
+  frag.append(line);
+  grid.append(frag);
+}
+
+// --- live panel + highlighting, refreshed every 20 s ---
+const liveEl = document.getElementById("live");
+function render() {
+  const m = nowMinutes();
+  document.getElementById("clock").textContent = simulated ? fmt(simulated) : clockText(m);
+  document.getElementById("clockLabel").innerHTML = simulated ? '<span class="sim">Heure simulée</span>' : "Il est";
+
+  grid.querySelectorAll(".slot").forEach(el => {
+    const st = status(slots[el.dataset.id], m);
+    el.classList.toggle("now", st === "now");
+    el.classList.toggle("past", st === "past");
+    if (st === "now") el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current");
+  });
+  const line = document.getElementById("nowline");
+  line.hidden = !live(m);
+  if (live(m)) line.style.top = (m / SPAN * 100) + "%";
+
+  if (!live(m)) {
+    const wait = m - SPAN >= 0 ? 1440 - m : 0;
+    liveEl.innerHTML = `<div class="offhours">Les scènes sont fermées.<br>Ouverture à <b>18h00</b>${wait ? ` (dans ${untilText(wait)})` : ""}, fin à 05h00.</div>`;
+    return;
+  }
+  liveEl.innerHTML = "";
+  for (const stage of Object.keys(STAGES)) {
+    const list = slots.filter(s => s.stage === stage);
+    const cur = list.find(s => m >= s.s && m < s.e);
+    const nxt = list.find(s => s.s > m);
+    const card = document.createElement("button");
+    card.type = "button"; card.className = "live-card"; card.dataset.stage = stage;
+    if (cur) {
+      const pct = (m - cur.s) / (cur.e - cur.s) * 100;
+      card.innerHTML = `
+        <span class="k"><span class="dot"></span>${STAGES[stage]} · en direct</span>
+        <span class="n"></span>
+        <span class="t">${fmt(cur.start)} – ${fmt(cur.end)} · encore ${untilText(cur.e - m)}</span>
+        <span class="bar"><i style="width:${pct.toFixed(1)}%"></i></span>
+        <span class="next">${nxt ? `Ensuite : <b></b> à ${fmt(nxt.start)}` : "Dernier set de la nuit"}</span>`;
+      card.querySelector(".n").textContent = cur.name;
+      if (nxt) card.querySelector(".next b").textContent = nxt.name;
+      card.addEventListener("click", () => openArtist(cur));
+    } else {
+      card.disabled = true;
+      card.innerHTML = `<span class="k">${STAGES[stage]}</span><span class="n">—</span>`;
+    }
+    liveEl.append(card);
+  }
+}
+
+// --- artist sheet ---
+const dlg = document.getElementById("dlg");
+function openArtist(s) {
+  const info = ARTISTS[s.name] || { tags: [] };
+  const m = nowMinutes();
+  const st = status(s, m);
+  document.getElementById("sheet").dataset.stage = s.stage;
+  document.getElementById("dlgStage").textContent = `Scène ${STAGES[s.stage]}`;
+  document.getElementById("dlgName").textContent = s.name;
+  const when = `<b>${fmt(s.start)} – ${fmt(s.end)}</b>`;
+  const extra = st === "now" ? ` · en direct, encore ${untilText(s.e - m)}`
+    : st === "next" ? ` · dans ${untilText(s.s - m)}`
+    : st === "past" ? " · terminé" : "";
+  document.getElementById("dlgWhen").innerHTML = when + extra;
+  const ul = document.getElementById("dlgTags");
+  ul.innerHTML = "";
+  info.tags.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.append(li); });
+  document.getElementById("dlgNote").textContent = info.members || "";
+  if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+}
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+
+// --- simulation controls ---
+const simInput = document.getElementById("simTime");
+function setSim(v) {
+  simulated = v || null;
+  simInput.value = v || "";
+  render();
+  if (v) scrollToNow();
+}
+simInput.addEventListener("input", () => setSim(simInput.value));
+document.getElementById("simReset").addEventListener("click", () => setSim(null));
+window.addEventListener("hashchange", () => { const t = readHashTime(); if (t) setSim(t); });
+
+function scrollToNow() {
+  const m = nowMinutes();
+  if (!live(m)) return;
+  const line = document.getElementById("nowline");
+  const r = line.getBoundingClientRect();
+  if (r.top < 0 || r.bottom > innerHeight) window.scrollTo({ top: scrollY + r.top - innerHeight * .45, behavior: "smooth" });
+}
+
+buildGrid();
+const hashT = readHashTime();
+if (hashT) { simulated = hashT; simInput.value = hashT; document.getElementById("simbox").open = true; }
+render();
+setInterval(render, 20000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+
+// --- PWA: offline cache + install prompt ---
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").then(() => {
+      document.getElementById("offline").textContent = "Prêt pour le hors ligne : la timetable reste consultable sans réseau.";
+    }).catch(() => {});
+  });
+}
+let deferredPrompt = null;
+const installBtn = document.getElementById("install");
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; installBtn.hidden = false; });
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice.catch(() => {});
+  deferredPrompt = null; installBtn.hidden = true;
+});
+</script>
+</body>
+</html>
