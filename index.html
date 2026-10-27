@@ -472,7 +472,7 @@ function render() {
       card.innerHTML = `
         <span class="k"><span class="dot"></span>${STAGES[stage]} · en direct</span>
         <span class="n"></span>
-        <span class="t">${fmt(cur.start)} – ${fmt(cur.end)} · encore ${untilText(cur.e - m)}</span>
+        <span class="t">Encore ${untilText(cur.e - m)}</span>
         <span class="bar"><i style="width:${pct.toFixed(1)}%"></i></span>
         <span class="next">${nxt ? `Ensuite : <b></b> à ${fmt(nxt.start)}` : "Dernier set de la nuit"}</span>`;
       card.querySelector(".n").textContent = (isFav(cur) ? "★ " : "") + cur.name;
