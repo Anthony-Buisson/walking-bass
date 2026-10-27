@@ -159,7 +159,11 @@ body::before {
   content: "EN DIRECT"; position: absolute; top: -8px; right: 6px; padding: 1px 6px 0;
   font-size: 10px; letter-spacing: .12em; background: var(--blood); color: #1a0402; border-radius: 3px;
 }
-.slot .star { display: none; position: absolute; top: 3px; left: 6px; font-size: 13px; line-height: 1; color: var(--gold); text-shadow: 0 0 6px rgba(0, 0, 0, .8); }
+.skull { width: 1em; height: 1em; fill: currentColor; vertical-align: -.12em; flex: none; }
+.slot .star { display: none; position: absolute; top: 4px; left: 6px; font-size: 15px; line-height: 0; color: var(--gold); filter: drop-shadow(0 0 4px rgba(0, 0, 0, .9)); }
+.favbtn { display: inline-flex; align-items: center; gap: 8px; }
+.favbtn .skull { font-size: 18px; }
+.live-card .n .skull { color: var(--gold); margin-right: .25em; }
 .slot.fav .star { display: block; }
 .slot.fav { border: 2px solid var(--gold); box-shadow: 0 0 0 1px rgba(242, 193, 78, .35), 0 0 16px rgba(242, 193, 78, .45), inset 0 0 14px rgba(0, 0, 0, .6); }
 .slot.fav.now { box-shadow: 0 0 0 1px var(--gold), 0 0 26px rgba(242, 193, 78, .7), inset 0 0 14px rgba(0, 0, 0, .4); }
@@ -294,7 +298,7 @@ footer summary.on { color: var(--blood); }
     <ul class="tags" id="dlgTags"></ul>
     <div class="members" id="dlgNote"></div>
     <div class="actions">
-      <button class="favbtn" id="dlgFav" type="button" aria-pressed="false">☆ Ajouter aux favoris</button>
+      <button class="favbtn" id="dlgFav" type="button" aria-pressed="false"></button>
       <button class="btn" value="close">Fermer</button>
     </div>
   </form>
@@ -315,6 +319,7 @@ footer summary.on { color: var(--blood); }
       <feTurbulence type="fractalNoise" baseFrequency="0.035 0.9" numOctaves="3" seed="7"/>
       <feDisplacementMap in="SourceGraphic" scale="9"/>
     </filter>
+    <path id="skull" fill-rule="evenodd" d="M12 2C7.1 2 3.5 5.4 3.5 10c0 2.5 1.1 4.5 2.9 5.8V19c0 .6.4 1 1 1h1.4v-2.2h1.6V20h3.2v-2.2h1.6V20h1.4c.6 0 1-.4 1-1v-3.2c1.8-1.3 2.9-3.3 2.9-5.8C20.5 5.4 16.9 2 12 2ZM8.6 9a2.1 2.1 0 1 0 0 4.2 2.1 2.1 0 0 0 0-4.2Zm6.8 0a2.1 2.1 0 1 0 0 4.2 2.1 2.1 0 0 0 0-4.2ZM12 13.6l-1.3 2.3h2.6Z"/>
     <g id="brush" filter="url(#rough)">
       <path d="M8 18 C40 8 90 12 150 9 C170 8 186 6 196 12 L190 20 L198 27 L186 33 L196 41 L182 47 C130 52 70 50 20 54 L4 50 L14 44 L2 38 L12 31 L0 24 Z"/>
       <path d="M150 50 L198 52 L176 56 Z M2 12 L40 10 L12 16 Z" opacity=".8"/>
@@ -415,7 +420,7 @@ function buildGrid() {
     const b = document.createElement("button");
     b.type = "button"; b.className = "slot"; b.dataset.stage = s.stage; b.dataset.id = s.id;
     b.style.gridRow = `${s.s / STEP + 1} / ${s.e / STEP + 1}`;
-    b.innerHTML = `<span class="star" aria-hidden="true">★</span><span>${s.name.replace(/ B2B /, " <small>B2B</small> ")}</span>`;
+    b.innerHTML = `<span class="star"><svg class="skull" viewBox="0 0 24 24" aria-hidden="true"><use href="#skull"/></svg></span><span>${s.name.replace(/ B2B /, " <small>B2B</small> ")}</span>`;
     b.setAttribute("aria-label", `${s.name}, ${STAGES[s.stage]}, ${fmt(s.start)} à ${fmt(s.end)}`);
     b.addEventListener("click", () => openArtist(s));
     frag.append(b);
@@ -475,7 +480,8 @@ function render() {
         <span class="t">Encore ${untilText(cur.e - m)}</span>
         <span class="bar"><i style="width:${pct.toFixed(1)}%"></i></span>
         <span class="next">${nxt ? `Ensuite : <b></b> à ${fmt(nxt.start)}` : "Dernier set de la nuit"}</span>`;
-      card.querySelector(".n").textContent = (isFav(cur) ? "★ " : "") + cur.name;
+      card.querySelector(".n").textContent = cur.name;
+      if (isFav(cur)) card.querySelector(".n").insertAdjacentHTML("afterbegin", '<svg class="skull" viewBox="0 0 24 24" aria-hidden="true"><use href="#skull"/></svg>');
       if (nxt) card.querySelector(".next b").textContent = nxt.name;
       card.addEventListener("click", () => openArtist(cur));
     } else {
@@ -504,7 +510,7 @@ let dlgSlot = null;
 function syncFavButton() {
   const on = isFav(dlgSlot);
   dlgFav.setAttribute("aria-pressed", String(on));
-  dlgFav.textContent = on ? "★ Dans mes favoris" : "☆ Ajouter aux favoris";
+  dlgFav.innerHTML = '<svg class="skull" viewBox="0 0 24 24" aria-hidden="true"><use href="#skull"/></svg>' + (on ? "Dans mes favoris" : "Ajouter aux favoris");
 }
 dlgFav.addEventListener("click", () => { toggleFav(dlgSlot); syncFavButton(); });
 function openArtist(s) {
