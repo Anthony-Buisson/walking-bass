@@ -28,6 +28,7 @@
   --station: #c8312a;
   --station-deep: #3a1110;
   --blood: #ff5426;
+  --gold: #f2c14e;
   --line: rgba(236, 230, 212, .28);
   --font-title: "Creepster", "Impact", fantasy;
   --font-ui: "Oswald", "Arial Narrow", "Roboto Condensed", sans-serif;
@@ -158,6 +159,10 @@ body::before {
   content: "EN DIRECT"; position: absolute; top: -8px; right: 6px; padding: 1px 6px 0;
   font-size: 10px; letter-spacing: .12em; background: var(--blood); color: #1a0402; border-radius: 3px;
 }
+.slot .star { display: none; position: absolute; top: 3px; left: 6px; font-size: 13px; line-height: 1; color: var(--gold); text-shadow: 0 0 6px rgba(0, 0, 0, .8); }
+.slot.fav .star { display: block; }
+.slot.fav { border-color: color-mix(in srgb, var(--gold) 70%, transparent); }
+.slot.fav.now { border-color: var(--gold); }
 .nowline { position: absolute; left: calc(var(--rail) - 6px); right: calc(var(--rail) - 6px); height: 0; border-top: 2px solid var(--blood); z-index: 3; pointer-events: none; box-shadow: 0 0 10px var(--blood); }
 .nowline::before { content: ""; position: absolute; left: -5px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--blood); }
 
@@ -181,6 +186,32 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
   border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 22%, transparent); border-radius: 999px;
 }
 .sheet .members { font-size: 13px; color: var(--muted); }
+.sheet .actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.favbtn {
+  font: inherit; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+  color: var(--gold); background: transparent; border: 1px solid var(--gold); padding: 8px 14px; border-radius: 4px;
+}
+.favbtn[aria-pressed="true"] { color: #1d1503; background: var(--gold); }
+.favbtn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+
+/* Favourites list */
+.favs { display: grid; gap: 8px; }
+.favs h2 { margin: 0; font-size: 13px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+.favs ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.favs li button {
+  width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
+  font: inherit; color: var(--ink); text-align: left; cursor: pointer;
+  background: rgba(0, 0, 0, .35); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 4px; padding: 8px 12px;
+}
+.favs li[data-stage="arcane"] button { --c: var(--arcane); }
+.favs li[data-stage="station"] button { --c: var(--station); }
+.favs .fn { font-size: 16px; font-weight: 700; text-transform: uppercase; min-width: 0; overflow-wrap: anywhere; }
+.favs .fs { min-width: 5.2em; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c); filter: brightness(1.45); }
+.favs .ft { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.favs li.now button { border-color: var(--gold); border-left-color: var(--c); box-shadow: 0 0 14px rgba(242, 193, 78, .25); }
+.favs li.now .ft { color: var(--gold); }
+.favs li.past { opacity: .45; }
+.favs li button:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
 .btn {
   justify-self: end; font: inherit; font-size: 14px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer;
@@ -238,6 +269,11 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
     <div class="live" id="live"></div>
   </section>
 
+  <section class="favs" id="favs" aria-labelledby="favsTitle" hidden>
+    <h2 id="favsTitle">★ Mes favoris</h2>
+    <ul id="favList"></ul>
+  </section>
+
   <section class="tt" aria-label="Timetable">
     <div class="heads" aria-hidden="true">
       <span></span>
@@ -266,7 +302,10 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
     <div class="when" id="dlgWhen"></div>
     <ul class="tags" id="dlgTags"></ul>
     <div class="members" id="dlgNote"></div>
-    <button class="btn" value="close">Fermer</button>
+    <div class="actions">
+      <button class="favbtn" id="dlgFav" type="button" aria-pressed="false">☆ Ajouter aux favoris</button>
+      <button class="btn" value="close">Fermer</button>
+    </div>
   </form>
 </dialog>
 
@@ -383,7 +422,7 @@ function buildGrid() {
     const b = document.createElement("button");
     b.type = "button"; b.className = "slot"; b.dataset.stage = s.stage; b.dataset.id = s.id;
     b.style.gridRow = `${s.s / STEP + 1} / ${s.e / STEP + 1}`;
-    b.innerHTML = `<span>${s.name.replace(/ B2B /, " <small>B2B</small> ")}</span>`;
+    b.innerHTML = `<span class="star" aria-hidden="true">★</span><span>${s.name.replace(/ B2B /, " <small>B2B</small> ")}</span>`;
     b.setAttribute("aria-label", `${s.name}, ${STAGES[s.stage]}, ${fmt(s.start)} à ${fmt(s.end)}`);
     b.addEventListener("click", () => openArtist(s));
     frag.append(b);
@@ -394,6 +433,40 @@ function buildGrid() {
   grid.append(frag);
 }
 
+// --- favourites, kept on this device only ---
+const FAV_KEY = "walking-bass-favoris";
+const favKey = s => `${s.stage}:${s.name}`;
+let favs = new Set();
+try { favs = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); } catch (e) {}
+const isFav = s => favs.has(favKey(s));
+function toggleFav(s) {
+  const k = favKey(s);
+  if (favs.has(k)) favs.delete(k); else favs.add(k);
+  try { localStorage.setItem(FAV_KEY, JSON.stringify([...favs])); } catch (e) {}
+  render();
+}
+function renderFavs(m) {
+  const list = slots.filter(isFav).sort((a, b) => a.s - b.s || a.stage.localeCompare(b.stage));
+  document.getElementById("favs").hidden = !list.length;
+  const ul = document.getElementById("favList");
+  ul.innerHTML = "";
+  list.forEach(s => {
+    const st = status(s, m);
+    const li = document.createElement("li");
+    li.dataset.stage = s.stage;
+    li.className = st;
+    li.innerHTML = `<button type="button"><span class="fs"></span><span class="fn"></span><span class="ft"></span></button>`;
+    li.querySelector(".fs").textContent = STAGES[s.stage];
+    li.querySelector(".fn").textContent = s.name;
+    li.querySelector(".ft").textContent = st === "now" ? "En direct"
+      : st === "past" ? "Terminé"
+      : st === "next" ? `${fmt(s.start)} · dans ${untilText(s.s - m)}`
+      : fmt(s.start);
+    li.querySelector("button").addEventListener("click", () => openArtist(s));
+    ul.append(li);
+  });
+}
+
 // --- live panel + highlighting, refreshed every 20 s ---
 const liveEl = document.getElementById("live");
 function render() {
@@ -402,11 +475,13 @@ function render() {
     const st = status(slots[el.dataset.id], m);
     el.classList.toggle("now", st === "now");
     el.classList.toggle("past", st === "past");
+    el.classList.toggle("fav", isFav(slots[el.dataset.id]));
     if (st === "now") el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current");
   });
   const line = document.getElementById("nowline");
   line.hidden = !live(m);
   if (live(m)) line.style.top = (m / SPAN * 100) + "%";
+  renderFavs(m);
 
   if (!live(m)) {
     if (!document.getElementById("countdown")) {
@@ -430,7 +505,7 @@ function render() {
         <span class="t">${fmt(cur.start)} – ${fmt(cur.end)} · encore ${untilText(cur.e - m)}</span>
         <span class="bar"><i style="width:${pct.toFixed(1)}%"></i></span>
         <span class="next">${nxt ? `Ensuite : <b></b> à ${fmt(nxt.start)}` : "Dernier set de la nuit"}</span>`;
-      card.querySelector(".n").textContent = cur.name;
+      card.querySelector(".n").textContent = (isFav(cur) ? "★ " : "") + cur.name;
       if (nxt) card.querySelector(".next b").textContent = nxt.name;
       card.addEventListener("click", () => openArtist(cur));
     } else {
@@ -454,7 +529,17 @@ function tickCountdown() {
 
 // --- artist sheet ---
 const dlg = document.getElementById("dlg");
+const dlgFav = document.getElementById("dlgFav");
+let dlgSlot = null;
+function syncFavButton() {
+  const on = isFav(dlgSlot);
+  dlgFav.setAttribute("aria-pressed", String(on));
+  dlgFav.textContent = on ? "★ Dans mes favoris" : "☆ Ajouter aux favoris";
+}
+dlgFav.addEventListener("click", () => { toggleFav(dlgSlot); syncFavButton(); });
 function openArtist(s) {
+  dlgSlot = s;
+  syncFavButton();
   const info = ARTISTS[s.name] || { tags: [] };
   const m = nowMinutes();
   const st = status(s, m);
