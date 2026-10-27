@@ -6,4 +6,4 @@ Timetable des scènes Arcane et Station (31 octobre, 18h00 – 05h00), installab
 - Un clic sur un artiste affiche ses styles de musique.
 - Pour tester une autre heure : le menu « Tester une autre heure » en bas de page, ou `#t0145` à la fin de l'adresse.
 
-Hébergement : GitHub Pages, branche `main`, dossier racine. Après une modification, change `CACHE` dans `sw.js` (par exemple `walking-bass-v2`) pour que les téléphones déjà installés récupèrent la nouvelle version.
+Hébergement : GitHub Pages, branche `main`, dossier racine. L'appli charge la dernière version dès qu'elle a du réseau (repli sur le cache hors ligne ou après 3 s). Changer `CACHE` dans `sw.js` n'est utile que si les polices ou les icônes changent.

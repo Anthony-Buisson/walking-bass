@@ -500,9 +500,19 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) rend
 
 // --- PWA: offline cache + install prompt ---
 if ("serviceWorker" in navigator) {
+  // A page already under a service worker reloads once when a newer version takes over.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    location.reload();
+  });
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").then(() => {
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(reg => {
       document.getElementById("offline").textContent = "Prêt pour le hors ligne : la timetable reste consultable sans réseau.";
+      // Installed apps are resumed rather than reopened: look for a new version each time it comes back.
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); });
     }).catch(() => {});
   });
 }

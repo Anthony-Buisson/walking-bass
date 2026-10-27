@@ -1,5 +1,5 @@
-// Precache the whole app so the timetable works with no network once installed.
-const CACHE = "walking-bass-v4";
+// Keeps the timetable usable offline while picking up new versions as soon as the network allows.
+const CACHE = "walking-bass-v5";
 const ASSETS = [
   "./",
   "index.html",
@@ -11,9 +11,16 @@ const ASSETS = [
   "icons/icon-maskable-512.png",
   "icons/apple-touch-icon.png"
 ];
+// Past this delay a slow festival network falls back to the cached copy.
+const NETWORK_TIMEOUT = 3000;
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // cache: "reload" skips the browser's HTTP cache, so a fresh install never stores a stale page.
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS.map(url => new Request(url, { cache: "reload" }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", e => {
@@ -24,19 +31,41 @@ self.addEventListener("activate", e => {
   );
 });
 
-// Cache first, then refresh the cached copy in the background when online.
+// Pages and the manifest change with each release: network first, cache when offline or too slow.
+function networkFirst(request) {
+  return new Promise(resolve => {
+    let settled = false;
+    const fallback = () => caches.match(request, { ignoreSearch: true })
+      .then(r => r || caches.match("index.html"));
+    const timer = setTimeout(() => fallback().then(r => { if (r && !settled) { settled = true; resolve(r); } }), NETWORK_TIMEOUT);
+    fetch(request, { cache: "no-cache" }).then(res => {
+      if (res.ok) {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(request, copy));
+      }
+      clearTimeout(timer);
+      if (!settled) { settled = true; resolve(res); }
+    }).catch(() => {
+      clearTimeout(timer);
+      fallback().then(r => { if (!settled) { settled = true; resolve(r || Response.error()); } });
+    });
+  });
+}
+
+// Fonts and icons never change: cache first.
+function cacheFirst(request) {
+  return caches.match(request).then(cached => cached || fetch(request).then(res => {
+    if (res.ok) {
+      const copy = res.clone();
+      caches.open(CACHE).then(c => c.put(request, copy));
+    }
+    return res;
+  }));
+}
+
 self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
-  e.respondWith(
-    caches.match(e.request, { ignoreSearch: true }).then(cached => {
-      const network = fetch(e.request).then(res => {
-        if (res.ok && new URL(e.request.url).origin === location.origin) {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
-        }
-        return res;
-      }).catch(() => cached || caches.match("index.html"));
-      return cached || network;
-    })
-  );
+  const { request } = e;
+  if (request.method !== "GET" || new URL(request.url).origin !== location.origin) return;
+  const isStatic = /\/(fonts|icons)\//.test(new URL(request.url).pathname);
+  e.respondWith(isStatic ? cacheFirst(request) : networkFirst(request));
 });
