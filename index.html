@@ -189,7 +189,7 @@ footer details { width: 100%; max-width: 420px; }
 footer summary { cursor: pointer; text-transform: uppercase; letter-spacing: .14em; }
 .simrow { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 10px; flex-wrap: wrap; }
 .simrow input { font: inherit; font-size: 15px; color: var(--ink); background: #151815; border: 1px solid var(--line); padding: 6px 8px; border-radius: 4px; }
-#install[hidden] { display: none !important; }
+[hidden] { display: none !important; }
 
 @media (max-width: 420px) {
   :root { --row: 32px; }
@@ -214,7 +214,7 @@ footer summary { cursor: pointer; text-transform: uppercase; letter-spacing: .14
   </header>
 
   <section aria-label="En ce moment" style="display:grid;gap:12px">
-    <div class="clock"><span id="clockLabel">Il est</span><b id="clock">--:--</b></div>
+    <div class="clock" id="clockRow" hidden><span class="sim">Heure simulée</span><b id="clock">--:--</b></div>
     <div class="live" id="live"></div>
   </section>
 
@@ -339,10 +339,6 @@ function nowMinutes() {
   const d = new Date();
   return offset(`${d.getHours()}:${d.getMinutes()}`) + d.getSeconds() / 60;
 }
-function clockText(min) {
-  const t = (DAY_START + Math.floor(min)) % 1440;
-  return `${String(Math.floor(t / 60)).padStart(2, "0")}h${String(t % 60).padStart(2, "0")}`;
-}
 const live = m => m >= 0 && m < SPAN;
 const status = (slot, m) => !live(m) ? "off" : m >= slot.e ? "past" : m >= slot.s ? "now" : "next";
 
@@ -388,8 +384,9 @@ function buildGrid() {
 const liveEl = document.getElementById("live");
 function render() {
   const m = nowMinutes();
-  document.getElementById("clock").textContent = simulated ? fmt(simulated) : clockText(m);
-  document.getElementById("clockLabel").innerHTML = simulated ? '<span class="sim">Heure simulée</span>' : "Il est";
+  // Only a simulated time is shown, as a reminder that the page is not on the real clock.
+  document.getElementById("clockRow").hidden = !simulated;
+  if (simulated) document.getElementById("clock").textContent = fmt(simulated);
 
   grid.querySelectorAll(".slot").forEach(el => {
     const st = status(slots[el.dataset.id], m);
