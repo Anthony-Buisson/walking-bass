@@ -195,41 +195,6 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
 .favbtn[aria-pressed="true"] { color: #1d1503; background: var(--gold); }
 .favbtn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
 
-/* Favourites list */
-.favs { display: block; }
-.favs summary {
-  position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; cursor: pointer; list-style: none;
-  padding-right: 34px !important;
-  font-size: 13px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
-  padding: 8px 12px; border: 1px solid rgba(242, 193, 78, .4); border-radius: 4px; background: rgba(0, 0, 0, .3);
-}
-.favs summary::-webkit-details-marker { display: none; }
-.favs summary .ttl { white-space: nowrap; }
-.favs summary::after { content: ""; position: absolute; right: 14px; top: 13px; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-2px); transition: transform .2s; }
-.favs[open] summary::after { transform: rotate(-135deg) translateY(-2px); }
-.favs summary:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
-.favs .count { color: var(--muted); letter-spacing: .06em; }
-.favs .live-now { flex-basis: 100%; color: var(--ink); letter-spacing: .04em; text-transform: none; font-size: 14px; }
-.favs .live-now:empty { display: none; }
-.favs ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
-.favs li button {
-  width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
-  font: inherit; color: var(--ink); text-align: left; cursor: pointer;
-  background: rgba(0, 0, 0, .35); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 4px; padding: 8px 12px;
-}
-.favs li[data-stage="arcane"] button { --c: var(--arcane); }
-.favs li[data-stage="station"] button { --c: var(--station); }
-.favs .fn { font-size: 16px; font-weight: 700; text-transform: uppercase; min-width: 0; overflow-wrap: anywhere; }
-.favs .fs { min-width: 5.2em; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c); filter: brightness(1.45); }
-.favs .ft { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
-.favs li.now button { border-color: var(--gold); border-left-color: var(--c); box-shadow: 0 0 14px rgba(242, 193, 78, .25); }
-.favs li.now .ft { color: var(--gold); }
-.favs li.past { opacity: .45; }
-.favs li button:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
-.btn {
-  justify-self: end; font: inherit; font-size: 14px; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 8px 16px; border-radius: 4px; cursor: pointer;
-}
 
 /* Install call to action */
 .install {
@@ -282,11 +247,6 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
   <section aria-label="En ce moment" style="display:grid;gap:12px">
     <div class="live" id="live"></div>
   </section>
-
-  <details class="favs" id="favs" hidden>
-    <summary><span class="ttl">★ Mes favoris <span class="count" id="favCount"></span></span><span class="live-now" id="favLive"></span></summary>
-    <ul id="favList"></ul>
-  </details>
 
   <section class="tt" aria-label="Timetable">
     <div class="heads" aria-hidden="true">
@@ -459,32 +419,6 @@ function toggleFav(s) {
   try { localStorage.setItem(FAV_KEY, JSON.stringify([...favs])); } catch (e) {}
   render();
 }
-function renderFavs(m) {
-  const list = slots.filter(isFav).sort((a, b) => a.s - b.s || a.stage.localeCompare(b.stage));
-  document.getElementById("favs").hidden = !list.length;
-  document.getElementById("favCount").textContent = `(${list.length})`;
-  // Folded by default: the summary still says when a favourite is on stage.
-  const playing = list.filter(s => status(s, m) === "now").map(s => s.name);
-  document.getElementById("favLive").textContent = playing.length ? `En direct : ${playing.join(", ")}` : "";
-  const ul = document.getElementById("favList");
-  ul.innerHTML = "";
-  list.forEach(s => {
-    const st = status(s, m);
-    const li = document.createElement("li");
-    li.dataset.stage = s.stage;
-    li.className = st;
-    li.innerHTML = `<button type="button"><span class="fs"></span><span class="fn"></span><span class="ft"></span></button>`;
-    li.querySelector(".fs").textContent = STAGES[s.stage];
-    li.querySelector(".fn").textContent = s.name;
-    li.querySelector(".ft").textContent = st === "now" ? "En direct"
-      : st === "past" ? "Terminé"
-      : st === "next" ? `${fmt(s.start)} · dans ${untilText(s.s - m)}`
-      : fmt(s.start);
-    li.querySelector("button").addEventListener("click", () => openArtist(s));
-    ul.append(li);
-  });
-}
-
 // --- live panel + highlighting, refreshed every 20 s ---
 const liveEl = document.getElementById("live");
 function render() {
@@ -499,7 +433,6 @@ function render() {
   const line = document.getElementById("nowline");
   line.hidden = !live(m);
   if (live(m)) line.style.top = (m / SPAN * 100) + "%";
-  renderFavs(m);
 
   if (!live(m)) {
     if (!document.getElementById("countdown")) {
