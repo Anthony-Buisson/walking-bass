@@ -108,8 +108,9 @@ body::after {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .6), 0 0 18px color-mix(in srgb, var(--c) 70%, transparent);
 }
 .zoomed .badge { font-size: clamp(12px, 2.8vw, 22px); }
-.badge[data-stage="arcane"] { --c: var(--arcane); left: 21.6%; top: 34%; }
-.badge[data-stage="station"] { --c: var(--station); left: 69%; top: 75%; }
+/* Placed in the empty dark areas next to each stage's brush label, so no map icon is hidden */
+.badge[data-stage="arcane"] { --c: var(--arcane); left: 16%; top: 67%; }
+.badge[data-stage="station"] { --c: var(--station); left: 26%; top: 86%; }
 .badge .k { display: flex; align-items: center; gap: .35em; font-size: .72em; letter-spacing: .14em; text-transform: uppercase; color: var(--c); filter: brightness(1.5); }
 .badge .n { font-weight: 700; font-size: 1.15em; text-transform: uppercase; overflow-wrap: anywhere; }
 .badge .t { font-size: .78em; color: var(--muted); font-variant-numeric: tabular-nums; }
