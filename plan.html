@@ -74,7 +74,7 @@ body::after {
   font-size: 14px; letter-spacing: .14em; text-transform: uppercase;
 }
 .tabs a[aria-current="page"] { color: #1a0402; background: var(--ink); }
-.tabs a:focus-visible, .zoom:focus-visible, .badge:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+.tabs a:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
 
 /* Map + legend: side by side when there is room, stacked on phones */
 .layout { display: grid; gap: 18px; align-items: start; }
@@ -82,13 +82,20 @@ body::after {
 .scroller { overflow: auto; border: 1px solid var(--line); border-radius: 6px; background: #000; overscroll-behavior-x: contain; }
 .map { position: relative; width: 100%; aspect-ratio: 1358 / 1110; }
 .zoomed .map { width: 230%; }
+/* Zoomed: the map scrolls inside a frame short enough to keep "Réduire" on screen */
+.scroller.zoomed { max-height: 62vh; max-height: 62svh; }
 .map img { display: block; width: 100%; height: 100%; }
 .legend { width: 100%; height: auto; max-width: 230px; justify-self: center; display: block; border-radius: 6px; }
-.tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; letter-spacing: .06em; }
+/* Same look as the timetable's install button, centred so it stays clear of the screen edge */
 .zoom {
-  font: inherit; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer;
-  color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 6px 12px; border-radius: 4px;
+  justify-self: center; margin-top: 6px; display: inline-flex; align-items: center; gap: 10px;
+  font: inherit; font-size: 15px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; cursor: pointer;
+  color: #1a0402; background: var(--blood); border: 0; border-radius: 4px; padding: 10px 20px 9px;
+  box-shadow: 0 3px 0 #5a0d06, 0 0 20px rgba(255, 84, 38, .3);
 }
+.zoom svg { width: 18px; height: 18px; flex: none; }
+.zoom:active { transform: translateY(2px); box-shadow: 0 1px 0 #5a0d06; }
+.zoom:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
 /* Live badge on a stage */
 .badge {
@@ -96,7 +103,7 @@ body::after {
   width: max-content; max-width: 30%;
   display: grid; gap: 1px; justify-items: center; text-align: center;
   padding: .45em .7em .4em; border-radius: 5px;
-  font-size: clamp(9px, 1.55vw, 17px); line-height: 1.05; color: var(--ink); text-decoration: none;
+  font-size: clamp(9px, 1.55vw, 17px); line-height: 1.05; color: var(--ink);
   background: rgba(0, 0, 0, .82); border: 1.5px solid var(--c);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .6), 0 0 18px color-mix(in srgb, var(--c) 70%, transparent);
 }
@@ -132,14 +139,11 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
       <div class="scroller" id="scroller">
         <div class="map">
           <img src="img/plan.webp" width="1358" height="1110" alt="Plan du festival : scène Arcane à gauche près de l'entrée, scène Station en bas au centre, bars, food trucks, WC, points d'eau et poste de secours entre les deux.">
-          <a class="badge" data-stage="arcane" href="./"></a>
-          <a class="badge" data-stage="station" href="./"></a>
+          <div class="badge" data-stage="arcane"></div>
+          <div class="badge" data-stage="station"></div>
         </div>
       </div>
-      <div class="tools">
-        <span>Touche une scène pour voir la timetable.</span>
-        <button class="zoom" id="zoom" type="button" aria-pressed="false">Agrandir</button>
-      </div>
+      <button class="zoom" id="zoom" type="button" aria-pressed="false"></button>
     </section>
     <img class="legend" src="img/legende.webp" width="526" height="935" alt="Légende : casiers, bars, food trucks, cashless, points d'eau, Technobus, zone de jeux, WC et WC PSH, espaces dédiés PSH, poste de secours, stands VSSD et RDR, District (merchandising, make-up, studio photo).">
   </div>
@@ -165,9 +169,6 @@ function render() {
       ? `<span class="k"><span class="dot"></span>${STAGES[stage]} · en direct</span><span class="n"></span><span class="t">jusqu'à ${fmt(cur.end)}</span>`
       : `<span class="k">${STAGES[stage]}</span><span class="n"></span><span class="t">dès ${fmt(first.start)}</span>`;
     b.querySelector(".n").textContent = (cur || first).name;
-    b.setAttribute("aria-label", cur
-      ? `Scène ${STAGES[stage]}, en direct : ${cur.name} jusqu'à ${fmt(cur.end)}. Ouvrir la timetable.`
-      : `Scène ${STAGES[stage]}, ouverture à ${fmt(first.start)} avec ${first.name}. Ouvrir la timetable.`);
   });
 }
 render();
@@ -177,11 +178,18 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) rend
 // Phones: the whole map fits the width, "Agrandir" makes it wider and scrollable.
 const scroller = document.getElementById("scroller");
 const zoom = document.getElementById("zoom");
+const ZOOM_IN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8M10.5 7.5v6M7.5 10.5h6"/></svg>Agrandir le plan';
+const ZOOM_OUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8M7.5 10.5h6"/></svg>Réduire le plan';
+zoom.innerHTML = ZOOM_IN;
 zoom.addEventListener("click", () => {
   const on = scroller.classList.toggle("zoomed");
   zoom.setAttribute("aria-pressed", String(on));
-  zoom.textContent = on ? "Réduire" : "Agrandir";
-  if (on) scroller.scrollLeft = (scroller.scrollWidth - scroller.clientWidth) / 2;
+  zoom.innerHTML = on ? ZOOM_OUT : ZOOM_IN;
+  if (on) {
+    scroller.scrollLeft = (scroller.scrollWidth - scroller.clientWidth) / 2;
+    scroller.scrollTop = (scroller.scrollHeight - scroller.clientHeight) / 2;
+    scroller.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
 });
 
 // --- PWA: same service worker as the timetable ---
