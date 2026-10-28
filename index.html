@@ -111,6 +111,10 @@ body::before {
 .offhours { display: grid; gap: 4px; padding-block: 16px 18px; }
 .offhours .k { font-size: 13px; letter-spacing: .16em; text-transform: uppercase; }
 .countdown { font-size: clamp(44px, 14vw, 72px); font-weight: 700; line-height: 1; color: var(--ink); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.farewell .bye { font-family: var(--font-title); font-weight: 400; font-size: clamp(44px, 14vw, 68px); line-height: 1; color: var(--blood); letter-spacing: .03em; }
+.countdown.days { display: flex; justify-content: center; gap: clamp(10px, 4vw, 22px); font-size: clamp(38px, 12vw, 64px); }
+.countdown.days span { display: grid; gap: 6px; justify-items: center; }
+.countdown.days small { font-size: 11px; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 
 /* Stage headers: brush strokes */
 .heads { display: grid; grid-template-columns: var(--rail) 1fr 1fr var(--rail); gap: 0 10px; align-items: end; }
@@ -377,7 +381,12 @@ function nowMinutes() {
   const d = new Date();
   return offset(`${d.getHours()}:${d.getMinutes()}`) + d.getSeconds() / 60;
 }
-const live = m => m >= 0 && m < SPAN;
+// Live only during the festival night itself; before and after, the panel shows a countdown or a farewell.
+const OPENING = new Date(2026, 9, 31, 18, 0);
+const CLOSING = new Date(2026, 10, 1, 5, 0);
+const beforeOpening = () => Date.now() < OPENING;
+const afterClosing = () => Date.now() >= CLOSING;
+const live = m => !beforeOpening() && !afterClosing() && m >= 0 && m < SPAN;
 const status = (slot, m) => !live(m) ? "off" : m >= slot.e ? "past" : m >= slot.s ? "now" : "next";
 
 function untilText(mins) {
@@ -445,6 +454,12 @@ function render() {
   line.hidden = !live(m);
   if (live(m)) line.style.top = (m / SPAN * 100) + "%";
 
+  if (afterClosing()) {
+    if (!document.getElementById("farewell")) {
+      liveEl.innerHTML = `<div class="offhours farewell" id="farewell"><span class="k">The Last Raver</span><b class="bye">C'est fini</b><span>Merci d'être venus !</span></div>`;
+    }
+    return;
+  }
   if (!live(m)) {
     if (!document.getElementById("countdown")) {
       liveEl.innerHTML = `<div class="offhours"><span class="k">Ouverture des scènes dans</span><b class="countdown" id="countdown" role="timer"></b></div>`;
@@ -479,14 +494,22 @@ function render() {
   }
 }
 
-// Countdown to 18h00, shown while the stages are closed.
+// Countdown shown while the stages are closed: days included until the festival, then to 18h00.
 function tickCountdown() {
   const el = document.getElementById("countdown");
   if (!el) return;
   const m = nowMinutes();
   if (live(m)) { render(); return; }
-  const secs = Math.ceil((1440 - m) * 60);
   const pad = n => String(n).padStart(2, "0");
+  const early = beforeOpening();
+  el.classList.toggle("days", early);
+  if (early) {
+    const secs = Math.ceil((OPENING - Date.now()) / 1000);
+    const parts = [[Math.floor(secs / 86400), "jours"], [Math.floor(secs / 3600) % 24, "heures"], [Math.floor(secs / 60) % 60, "min"], [secs % 60, "sec"]];
+    el.innerHTML = parts.map(([n, u]) => `<span>${pad(n)}<small>${u}</small></span>`).join("");
+    return;
+  }
+  const secs = Math.ceil((1440 - m) * 60);
   el.textContent = `${pad(Math.floor(secs / 3600))}:${pad(Math.floor(secs / 60) % 60)}:${pad(secs % 60)}`;
 }
 
