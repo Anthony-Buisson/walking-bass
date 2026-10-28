@@ -109,8 +109,10 @@ body::after {
 }
 .zoomed .badge { font-size: clamp(12px, 2.8vw, 22px); }
 /* Placed in the empty dark areas next to each stage's brush label, so no map icon is hidden */
-.badge[data-stage="arcane"] { --c: var(--arcane); left: 16%; top: 67%; }
-.badge[data-stage="station"] { --c: var(--station); left: 26%; top: 86%; }
+/* Arcane hangs from just under its building, so a long name grows downwards;
+   Station keeps its right edge next to the STATION label, so a long name grows leftwards. */
+.badge[data-stage="arcane"] { --c: var(--arcane); left: 16%; top: 58.5%; transform: translateX(-50%); }
+.badge[data-stage="station"] { --c: var(--station); left: 43%; top: 86%; transform: translate(-100%, -50%); }
 .badge .k { display: flex; align-items: center; gap: .35em; font-size: .72em; letter-spacing: .14em; text-transform: uppercase; color: var(--c); filter: brightness(1.5); }
 .badge .n { font-weight: 700; font-size: 1.15em; text-transform: uppercase; overflow-wrap: anywhere; }
 .badge .t { font-size: .78em; color: var(--muted); font-variant-numeric: tabular-nums; }
