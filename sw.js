@@ -3,7 +3,6 @@ const CACHE = "walking-bass-v8";
 const ASSETS = [
   "./",
   "index.html",
-  "plan.html",
   "timetable.js",
   "manifest.webmanifest",
   "fonts/creepster.woff2",
