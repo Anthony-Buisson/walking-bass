@@ -59,7 +59,12 @@ function nowMinutes() {
   const d = new Date();
   return offset(`${d.getHours()}:${d.getMinutes()}`) + d.getSeconds() / 60;
 }
-const live = m => m >= 0 && m < SPAN;
+// Live only during the festival night itself; before and after, the panel shows a countdown or a farewell.
+const OPENING = new Date(2026, 9, 31, 18, 0);
+const CLOSING = new Date(2026, 10, 1, 5, 0);
+const beforeOpening = () => Date.now() < OPENING;
+const afterClosing = () => Date.now() >= CLOSING;
+const live = m => !beforeOpening() && !afterClosing() && m >= 0 && m < SPAN;
 const status = (slot, m) => !live(m) ? "off" : m >= slot.e ? "past" : m >= slot.s ? "now" : "next";
 
 function untilText(mins) {
