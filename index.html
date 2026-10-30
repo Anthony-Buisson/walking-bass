@@ -26,6 +26,7 @@
   --arcane: #4f9e3f;
   --arcane-deep: #17301a;
   --station: #c8312a;
+  --bus: #ff8a2a;       /* Technobus, orange like its flyer */
   --station-deep: #3a1110;
   --blood: #ff5426;
   --fav: #b9a77c;       /* favourites: icon, border, glow, button */
@@ -281,6 +282,15 @@ body[data-view="plan"] .title { justify-self: center; width: min(100%, 760px); }
 .badge .n { font-weight: 700; font-size: 1.15em; text-transform: uppercase; overflow-wrap: anywhere; }
 .badge .t { font-size: .78em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .badge.off { border-style: dashed; box-shadow: none; }
+/* Technobus: no permanent badge, the bus icon glows while a set is on and a tap shows who plays */
+.bus {
+  position: absolute; left: 92.6%; top: 20.9%; width: 5.2%; height: 7.4%;
+  padding: 0; border: 0; border-radius: 6px; background: transparent; cursor: pointer;
+}
+.bus.live { box-shadow: 0 0 0 2px var(--bus), 0 0 14px 3px var(--bus); animation: busglow 1.8s ease-in-out infinite; }
+@keyframes busglow { 50% { box-shadow: 0 0 0 2px var(--bus), 0 0 24px 7px color-mix(in srgb, var(--bus) 60%, transparent); } }
+.bus:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.badge[data-stage="technobus"] { --c: var(--bus); left: 91.5%; top: 24.6%; transform: translate(-100%, -50%); z-index: 2; }
 .badge .dot { width: .6em; height: .6em; flex: none; }
 
 /* Footer */
@@ -295,7 +305,7 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
   .slot { padding: 3px 5px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dot { animation: none; }
+  .dot, .bus.live { animation: none; }
   .slot { transition: none; }
 }
 </style>
@@ -349,6 +359,8 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
           <img src="img/plan.webp" width="1358" height="1110" alt="Plan du festival : scène Arcane à gauche près de l'entrée, scène Station en bas au centre, bars, food trucks, WC, points d'eau et poste de secours entre les deux.">
           <div class="badge" data-stage="arcane"></div>
           <div class="badge" data-stage="station"></div>
+          <button class="bus" id="bus" type="button" aria-expanded="false" aria-controls="busInfo" aria-label="Technobus : qui joue ?"></button>
+          <div class="badge" data-stage="technobus" id="busInfo" hidden></div>
         </div>
       </div>
       <button class="zoom" id="zoom" type="button" aria-pressed="false"></button>
@@ -554,19 +566,30 @@ dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 
 // --- one badge per stage: who is playing now, or who opens the night ---
 const badges = document.querySelectorAll(".badge");
+const MAP_STAGES = { ...STAGES, technobus: "Technobus" };
+const busBtn = document.getElementById("bus");
+const busInfo = document.getElementById("busInfo");
+function toggleBus(open) {
+  busInfo.hidden = !open;
+  busBtn.setAttribute("aria-expanded", String(open));
+}
+busBtn.addEventListener("click", e => { e.stopPropagation(); toggleBus(busInfo.hidden); });
+document.addEventListener("click", e => { if (!busInfo.hidden && !busInfo.contains(e.target)) toggleBus(false); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") toggleBus(false); });
 function renderBadges(m) {
   badges.forEach(b => {
     const stage = b.dataset.stage;
-    const list = slots.filter(s => s.stage === stage);
+    const list = stage === "technobus" ? busSlots : slots.filter(s => s.stage === stage);
     const cur = live(m) && list.find(s => m >= s.s && m < s.e);
     const first = list[0];
     b.classList.toggle("off", !cur);
     b.innerHTML = cur
-      ? `<span class="k"><span class="dot"></span>${STAGES[stage]} · en direct</span><span class="n"></span><span class="t">jusqu'à ${fmt(cur.end)}</span>`
+      ? `<span class="k"><span class="dot"></span>${MAP_STAGES[stage]} · en direct</span><span class="n"></span><span class="t">jusqu'à ${fmt(cur.end)}</span>`
       : afterClosing()
-      ? `<span class="k">${STAGES[stage]}</span><span class="n"></span>`
-      : `<span class="k">${STAGES[stage]}</span><span class="n"></span><span class="t">dès ${fmt(first.start)}</span>`;
+      ? `<span class="k">${MAP_STAGES[stage]}</span><span class="n"></span>`
+      : `<span class="k">${MAP_STAGES[stage]}</span><span class="n"></span><span class="t">dès ${fmt(first.start)}</span>`;
     b.querySelector(".n").textContent = cur ? cur.name : afterClosing() ? "Terminé" : first.name;
+    if (stage === "technobus") busBtn.classList.toggle("live", !!cur);
   });
 }
 

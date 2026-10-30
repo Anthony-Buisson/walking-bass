@@ -54,6 +54,25 @@ const offset = hhmm => { const [h, m] = hhmm.split(":").map(Number); return ((h 
 const fmt = hhmm => hhmm.replace(":", "h");
 const slots = SLOTS.map(([stage, name, start, end], i) => ({ id: i, stage, name, start, end, s: offset(start), e: offset(end) }));
 
+// Technobus, from its own flyer: shown on the map only, so it stays out of the two-stage timetable grid.
+const TECHNOBUS = [
+  ["Nick-All", "18:00", "19:00"],
+  ["Brettannett", "19:00", "19:45"],
+  ["Ellaya", "19:45", "20:30"],
+  ["BigT", "20:30", "21:15"],
+  ["CAC40", "21:15", "22:00"],
+  ["Elyven", "22:00", "22:45"],
+  ["Vielusos", "22:45", "23:30"],
+  ["Maaxx & Turbøø", "23:30", "00:15"],
+  ["Annyah", "00:15", "01:00"],
+  ["Antonella Almendra", "01:00", "01:45"],
+  ["AXJ", "01:45", "02:30"],
+  ["Nash Metek", "02:30", "03:15"],
+  ["Nemesyk", "03:15", "04:00"],
+  ["Thnderz", "04:00", "05:00"]
+];
+const busSlots = TECHNOBUS.map(([name, start, end]) => ({ stage: "technobus", name, start, end, s: offset(start), e: offset(end) }));
+
 // --- time source: the device clock ---
 function nowMinutes() {
   const d = new Date();
