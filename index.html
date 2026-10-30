@@ -164,17 +164,15 @@ body::before {
 }
 .slot .live-tag {
   display: none; position: absolute; top: -7px; right: 4px; z-index: 4; /* above the now line */
-  align-items: center; gap: 4px; padding: 1px 5px 0 4px; border-radius: 3px; line-height: 1.4;
-  font-size: 8.5px; letter-spacing: .1em; background: var(--blood); color: #1a0402;
+  align-items: center; padding: 1px 5px 0; border-radius: 3px; line-height: 1.4;
+  font-size: 9px; letter-spacing: .1em; background: var(--blood); color: #1a0402;
   border: 1px solid rgba(255, 220, 200, .45); animation: tagglow 2.4s ease-in-out infinite;
 }
 .slot.now .live-tag { display: inline-flex; }
 .slot.now { padding-top: 9px; } /* keeps the name clear of the tag */
-.live-tag i { width: 5px; height: 5px; border-radius: 50%; background: #fff4ec; animation: blink 1s steps(2, start) infinite; }
-@keyframes blink { to { visibility: hidden; } }
 @keyframes tagglow {
   0%, 100% { border-color: rgba(255, 220, 200, .45); box-shadow: 0 0 2px rgba(255, 84, 38, .35); }
-  50% { border-color: #ffe9df; box-shadow: 0 0 9px 2px rgba(255, 84, 38, .85); }
+  50% { border-color: #ffe9df; box-shadow: 0 0 10px 2px rgba(255, 84, 38, .9); }
 }
 .skull { width: 1em; height: 1em; fill: currentColor; vertical-align: -.12em; flex: none; }
 .slot .star { display: none; position: absolute; top: 4px; left: 6px; font-size: 15px; line-height: 0; color: var(--fav); filter: drop-shadow(0 0 4px rgba(0, 0, 0, .9)); }
@@ -295,8 +293,8 @@ body[data-view="plan"] .title { justify-self: center; width: min(100%, 760px); }
 .badge.off { border-style: dashed; box-shadow: none; }
 /* Technobus: no permanent badge, the bus icon glows while a set is on and a tap shows who plays */
 .bus {
-  position: absolute; left: 92.6%; top: 20.9%; width: 5.2%; height: 7.4%;
-  padding: 0; border: 0; border-radius: 6px; background: transparent; cursor: pointer;
+  position: absolute; left: 92.6%; top: 20.8%; width: 5.4%; height: 7.6%; /* the icon's own square tile */
+  padding: 0; border: 0; border-radius: 2px; background: transparent; cursor: pointer;
 }
 .bus.live { box-shadow: 0 0 0 1px var(--bus), 0 0 12px 2px var(--bus); animation: busglow 1.8s ease-in-out infinite; }
 @keyframes busglow { 50% { box-shadow: 0 0 0 1px var(--bus), 0 0 20px 5px color-mix(in srgb, var(--bus) 60%, transparent); } }
@@ -345,7 +343,7 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
   .tt { --rail: 38px; --gap: 6px; --bus-col: 104px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dot, .bus.live, .live-tag, .live-tag i { animation: none; }
+  .dot, .bus.live, .live-tag { animation: none; }
   .slot { transition: none; }
 }
 </style>
@@ -488,7 +486,7 @@ function buildGrid() {
   slots.forEach(s => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "slot"; b.dataset.stage = s.stage; b.dataset.id = s.id;
-    b.innerHTML = `<span class="live-tag" aria-hidden="true"><i></i>EN DIRECT</span><span class="star"><svg class="skull" viewBox="0 0 24 24" aria-hidden="true"><use href="#skull"/></svg></span><span>${s.name.replace(/ B2B /, " <small>B2B</small> ")}</span>`;
+    b.innerHTML = `<span class="live-tag" aria-hidden="true">EN DIRECT</span><span class="star"><svg class="skull" viewBox="0 0 24 24" aria-hidden="true"><use href="#skull"/></svg></span><span>${s.name.replace(/ B2B /, " <small>B2B</small> ")}</span>`;
     // The Technobus has no time rail of its own: its times sit in the slot
     if (s.stage === "technobus") b.insertAdjacentHTML("beforeend", `<span class="hr">${fmt(s.start)}–${fmt(s.end)}</span>`);
     b.setAttribute("aria-label", `${s.name}, ${STAGES[s.stage]}, ${fmt(s.start)} à ${fmt(s.end)}`);
