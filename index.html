@@ -27,6 +27,7 @@
   --arcane-deep: #17301a;
   --station: #c8312a;
   --bus: #ff8a2a;       /* Technobus, orange like its flyer */
+  --bus-deep: #3a1d08;
   --station-deep: #3a1110;
   --blood: #ff5426;
   --fav: #b9a77c;       /* favourites: icon, border, glow, button */
@@ -98,6 +99,7 @@ body::before {
 }
 .live-card[data-stage="arcane"] { --deep: var(--arcane-deep); --c: var(--arcane); }
 .live-card[data-stage="station"] { --deep: var(--station-deep); --c: var(--station); }
+.live-card[data-stage="technobus"] { --deep: var(--bus-deep); --c: var(--bus); grid-column: 1 / -1; }
 .live-card:disabled { cursor: default; }
 .live-card .k { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--c); filter: brightness(1.4); display: flex; align-items: center; gap: 6px; }
 .live-card .n { font-size: clamp(18px, 5vw, 26px); font-weight: 700; text-transform: uppercase; line-height: 1.05; overflow-wrap: anywhere; }
@@ -118,7 +120,7 @@ body::before {
 .countdown.days small { font-size: 11px; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 
 /* Stage headers: brush strokes */
-.heads { display: grid; grid-template-columns: var(--rail) 1fr 1fr var(--rail); gap: 0 10px; align-items: end; }
+.heads { display: grid; grid-template-columns: var(--rail) 1fr 1fr 1fr var(--rail); gap: 0 var(--gap); align-items: end; }
 .brush { position: relative; height: 62px; display: grid; place-items: center; }
 .brush svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .brush span {
@@ -126,17 +128,19 @@ body::before {
   font-size: clamp(22px, 6.6vw, 40px); letter-spacing: .02em; color: #f4efe2;
   text-shadow: 2px 2px 0 rgba(0, 0, 0, .7); transform: skewX(-6deg);
 }
+.brush.bus-head span { font-size: clamp(14px, 4.4vw, 32px); }
 
 /* Timetable grid */
-.tt { --rail: 46px; display: grid; gap: 6px; }
+/* Arcane | Technobus | Station; --col is one stage column, so the time ticks stop at their own stage */
+.tt { --rail: 46px; --gap: 10px; --col: calc((100% - 2 * var(--rail) - 4 * var(--gap)) / 3); display: grid; gap: 6px; }
 .grid {
   position: relative;
-  display: grid; grid-template-columns: var(--rail) 1fr 1fr var(--rail); grid-template-rows: repeat(22, var(--row));
-  column-gap: 10px;
+  display: grid; grid-template-columns: var(--rail) 1fr 1fr 1fr var(--rail); grid-template-rows: repeat(44, calc(var(--row) / 2));
+  column-gap: var(--gap);
 }
 .tick { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid var(--line); pointer-events: none; }
-.tick.l { right: calc(50% + 5px); left: calc(var(--rail) - 6px); }
-.tick.r { left: calc(50% + 5px); right: calc(var(--rail) - 6px); }
+.tick.l { left: calc(var(--rail) - 6px); right: calc(100% - var(--rail) - var(--gap) - var(--col)); }
+.tick.r { left: calc(100% - var(--rail) - var(--gap) - var(--col)); right: calc(var(--rail) - 6px); }
 .hl { position: absolute; font-size: 12px; letter-spacing: .04em; color: var(--ink); transform: translateY(-50%); font-variant-numeric: tabular-nums; pointer-events: none; }
 .hl.l { left: 0; }
 .hl.r { right: 0; text-align: right; }
@@ -147,10 +151,12 @@ body::before {
   color: var(--ink); background: linear-gradient(180deg, var(--deep), rgba(0, 0, 0, .6));
   border: 1.5px solid color-mix(in srgb, var(--c) 70%, transparent); border-radius: 5px;
   box-shadow: inset 0 0 14px rgba(0, 0, 0, .7);
-  cursor: pointer; overflow-wrap: anywhere; transition: transform .15s, opacity .3s, box-shadow .3s;
+  cursor: pointer; overflow-wrap: break-word; hyphens: manual; transition: transform .15s, opacity .3s, box-shadow .3s;
 }
 .slot[data-stage="arcane"] { --deep: rgba(30, 62, 30, .78); --c: var(--arcane); grid-column: 2; }
-.slot[data-stage="station"] { --deep: rgba(70, 18, 16, .78); --c: var(--station); grid-column: 3; }
+.slot[data-stage="technobus"] { --deep: rgba(80, 38, 10, .78); --c: var(--bus); grid-column: 3; font-size: clamp(11px, 3.2vw, 17px); }
+.slot[data-stage="station"] { --deep: rgba(70, 18, 16, .78); --c: var(--station); grid-column: 4; }
+.slot .hr { font-size: .68em; font-weight: 500; letter-spacing: .02em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .slot small { font-size: .62em; font-weight: 500; }
 .slot:hover { transform: translateY(-1px); }
 .slot:focus-visible, .live-card:focus-visible, .btn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
@@ -187,6 +193,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
 .sheet { display: grid; gap: 14px; padding: 20px 20px 22px; background: linear-gradient(170deg, var(--deep), transparent 70%); }
 .sheet[data-stage="arcane"] { --deep: var(--arcane-deep); --c: var(--arcane); }
 .sheet[data-stage="station"] { --deep: var(--station-deep); --c: var(--station); }
+.sheet[data-stage="technobus"] { --deep: var(--bus-deep); --c: var(--bus); }
 .sheet .stage { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--c); filter: brightness(1.45); }
 .sheet h2 { margin: 0; font-size: clamp(26px, 8vw, 36px); line-height: 1; text-transform: uppercase; text-wrap: balance; }
 .sheet .when { font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -287,8 +294,8 @@ body[data-view="plan"] .title { justify-self: center; width: min(100%, 760px); }
   position: absolute; left: 92.6%; top: 20.9%; width: 5.2%; height: 7.4%;
   padding: 0; border: 0; border-radius: 6px; background: transparent; cursor: pointer;
 }
-.bus.live { box-shadow: 0 0 0 2px var(--bus), 0 0 14px 3px var(--bus); animation: busglow 1.8s ease-in-out infinite; }
-@keyframes busglow { 50% { box-shadow: 0 0 0 2px var(--bus), 0 0 24px 7px color-mix(in srgb, var(--bus) 60%, transparent); } }
+.bus.live { box-shadow: 0 0 0 1px var(--bus), 0 0 12px 2px var(--bus); animation: busglow 1.8s ease-in-out infinite; }
+@keyframes busglow { 50% { box-shadow: 0 0 0 1px var(--bus), 0 0 20px 5px color-mix(in srgb, var(--bus) 60%, transparent); } }
 .bus:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .badge[data-stage="technobus"] { --c: var(--bus); left: 91.5%; top: 24.6%; transform: translate(-100%, -50%); z-index: 2; }
 .badge .dot { width: .6em; height: .6em; flex: none; }
@@ -299,10 +306,13 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
 
 @media (max-width: 420px) {
   :root { --row: 32px; }
-  .tt { --rail: 38px; }
+  .tt { --rail: 38px; --gap: 6px; }
   .hl { font-size: 10.5px; }
-  .grid, .heads { column-gap: 6px; }
-  .slot { padding: 3px 5px; }
+  .slot { padding: 3px 4px; margin: 2px 0; font-size: 11.5px; }
+  .slot[data-stage="technobus"] { font-size: 11px; }
+  /* Three stage columns on a phone: smaller brush labels so they don't overlap */
+  .brush span { font-size: clamp(15px, 4.8vw, 20px); }
+  .brush.bus-head span { font-size: clamp(12px, 3.9vw, 16px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .dot, .bus.live { animation: none; }
@@ -340,6 +350,10 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
       <div class="brush">
         <svg viewBox="0 0 200 60" preserveAspectRatio="none"><use href="#brush" fill="#3d8a33"/></svg>
         <span>ARCANE</span>
+      </div>
+      <div class="brush bus-head">
+        <svg viewBox="0 0 200 60" preserveAspectRatio="none"><use href="#brush" fill="#d8641a"/></svg>
+        <span>TECHNOBUS</span>
       </div>
       <div class="brush">
         <svg viewBox="0 0 200 60" preserveAspectRatio="none"><use href="#brush" fill="#b8231c"/></svg>
@@ -419,7 +433,7 @@ const rowPx = () => parseFloat(getComputedStyle(document.documentElement).getPro
 function buildGrid() {
   const frag = document.createDocumentFragment();
   const boundaries = { arcane: new Set(), station: new Set() };
-  slots.forEach(s => { boundaries[s.stage].add(s.start); boundaries[s.stage].add(s.end); });
+  slots.forEach(s => { if (boundaries[s.stage]) { boundaries[s.stage].add(s.start); boundaries[s.stage].add(s.end); } });
   for (const [stage, side] of [["arcane", "l"], ["station", "r"]]) {
     [...boundaries[stage]].forEach(t => {
       const pct = offset(t) / SPAN * 100;
@@ -435,6 +449,8 @@ function buildGrid() {
     b.type = "button"; b.className = "slot"; b.dataset.stage = s.stage; b.dataset.id = s.id;
     b.style.gridRow = `${s.s / STEP + 1} / ${s.e / STEP + 1}`;
     b.innerHTML = `<span class="star"><svg class="skull" viewBox="0 0 24 24" aria-hidden="true"><use href="#skull"/></svg></span><span>${s.name.replace(/ B2B /, " <small>B2B</small> ")}</span>`;
+    // The Technobus has no time rail of its own: its times sit in the slot
+    if (s.stage === "technobus") b.insertAdjacentHTML("beforeend", `<span class="hr">${fmt(s.start)}–${fmt(s.end)}</span>`);
     b.setAttribute("aria-label", `${s.name}, ${STAGES[s.stage]}, ${fmt(s.start)} à ${fmt(s.end)}`);
     b.addEventListener("click", () => openArtist(s));
     frag.append(b);
@@ -566,7 +582,6 @@ dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 
 // --- one badge per stage: who is playing now, or who opens the night ---
 const badges = document.querySelectorAll(".badge");
-const MAP_STAGES = { ...STAGES, technobus: "Technobus" };
 const busBtn = document.getElementById("bus");
 const busInfo = document.getElementById("busInfo");
 function toggleBus(open) {
@@ -579,15 +594,15 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") toggleBus(fa
 function renderBadges(m) {
   badges.forEach(b => {
     const stage = b.dataset.stage;
-    const list = stage === "technobus" ? busSlots : slots.filter(s => s.stage === stage);
+    const list = slots.filter(s => s.stage === stage);
     const cur = live(m) && list.find(s => m >= s.s && m < s.e);
     const first = list[0];
     b.classList.toggle("off", !cur);
     b.innerHTML = cur
-      ? `<span class="k"><span class="dot"></span>${MAP_STAGES[stage]} · en direct</span><span class="n"></span><span class="t">jusqu'à ${fmt(cur.end)}</span>`
+      ? `<span class="k"><span class="dot"></span>${STAGES[stage]} · en direct</span><span class="n"></span><span class="t">jusqu'à ${fmt(cur.end)}</span>`
       : afterClosing()
-      ? `<span class="k">${MAP_STAGES[stage]}</span><span class="n"></span>`
-      : `<span class="k">${MAP_STAGES[stage]}</span><span class="n"></span><span class="t">dès ${fmt(first.start)}</span>`;
+      ? `<span class="k">${STAGES[stage]}</span><span class="n"></span>`
+      : `<span class="k">${STAGES[stage]}</span><span class="n"></span><span class="t">dès ${fmt(first.start)}</span>`;
     b.querySelector(".n").textContent = cur ? cur.name : afterClosing() ? "Terminé" : first.name;
     if (stage === "technobus") busBtn.classList.toggle("live", !!cur);
   });

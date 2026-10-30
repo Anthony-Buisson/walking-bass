@@ -1,6 +1,6 @@
 // Shared by the timetable and the map: the line-up and the time-of-day logic (18h00 – 05h00, midnight wrap).
 // Timetable transcribed from the official flyer. Times are "HH:MM"; slots past midnight belong to the same night.
-const STAGES = { arcane: "Arcane", station: "Station" };
+const STAGES = { arcane: "Arcane", station: "Station", technobus: "Technobus" };
 const ARTISTS = {
   "Tremplin": { tags: ["Scène tremplin", "Talents locaux"] },
   "Insane Creatures": { tags: ["Industrial Techno", "Dark Techno", "EBM"] },
@@ -42,36 +42,32 @@ const SLOTS = [
   ["station", "Samuel Moriero", "00:30", "01:30"],
   ["station", "Vortek's B2B Omaks", "01:30", "03:00"],
   ["station", "Dual Damage", "03:00", "04:00"],
-  ["station", "Yoshiko", "04:00", "05:00"]
+  ["station", "Yoshiko", "04:00", "05:00"],
+  // Technobus, from its own flyer: 45-minute sets
+  ["technobus", "Nick-All", "18:00", "19:00"],
+  ["technobus", "Brettannett", "19:00", "19:45"],
+  ["technobus", "Ellaya", "19:45", "20:30"],
+  ["technobus", "BigT", "20:30", "21:15"],
+  ["technobus", "CAC40", "21:15", "22:00"],
+  ["technobus", "Elyven", "22:00", "22:45"],
+  ["technobus", "Vielusos", "22:45", "23:30"],
+  ["technobus", "Maaxx & Turbøø", "23:30", "00:15"],
+  ["technobus", "Annyah", "00:15", "01:00"],
+  ["technobus", "Antonella Almendra", "01:00", "01:45"],
+  ["technobus", "AXJ", "01:45", "02:30"],
+  ["technobus", "Nash Metek", "02:30", "03:15"],
+  ["technobus", "Nemesyk", "03:15", "04:00"],
+  ["technobus", "Thnderz", "04:00", "05:00"]
 ];
 
 const DAY_START = 18 * 60;          // 18h00
 const SPAN = 11 * 60;               // until 05h00
-const STEP = 30;                    // one grid row = 30 min
+const STEP = 15;                    // one grid row = 15 min (Technobus sets end on the quarter hour)
 
 // Minutes elapsed since 18h00, wrapping past midnight (01h00 -> 420).
 const offset = hhmm => { const [h, m] = hhmm.split(":").map(Number); return ((h * 60 + m) - DAY_START + 1440) % 1440; };
 const fmt = hhmm => hhmm.replace(":", "h");
 const slots = SLOTS.map(([stage, name, start, end], i) => ({ id: i, stage, name, start, end, s: offset(start), e: offset(end) }));
-
-// Technobus, from its own flyer: shown on the map only, so it stays out of the two-stage timetable grid.
-const TECHNOBUS = [
-  ["Nick-All", "18:00", "19:00"],
-  ["Brettannett", "19:00", "19:45"],
-  ["Ellaya", "19:45", "20:30"],
-  ["BigT", "20:30", "21:15"],
-  ["CAC40", "21:15", "22:00"],
-  ["Elyven", "22:00", "22:45"],
-  ["Vielusos", "22:45", "23:30"],
-  ["Maaxx & Turbøø", "23:30", "00:15"],
-  ["Annyah", "00:15", "01:00"],
-  ["Antonella Almendra", "01:00", "01:45"],
-  ["AXJ", "01:45", "02:30"],
-  ["Nash Metek", "02:30", "03:15"],
-  ["Nemesyk", "03:15", "04:00"],
-  ["Thnderz", "04:00", "05:00"]
-];
-const busSlots = TECHNOBUS.map(([name, start, end]) => ({ stage: "technobus", name, start, end, s: offset(start), e: offset(end) }));
 
 // --- time source: the device clock ---
 function nowMinutes() {
