@@ -92,22 +92,6 @@ body::before {
 
 /* Clock + live panel */
 .live { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.live-card {
-  position: relative; border: 1px solid var(--line); padding: 12px 12px 14px; min-width: 0;
-  background: linear-gradient(160deg, var(--deep), rgba(0, 0, 0, .55));
-  display: grid; gap: 6px; text-align: left; color: inherit; font: inherit; cursor: pointer;
-}
-.live-card[data-stage="arcane"] { --deep: var(--arcane-deep); --c: var(--arcane); }
-.live-card[data-stage="station"] { --deep: var(--station-deep); --c: var(--station); }
-.live-card[data-stage="technobus"] { --deep: var(--bus-deep); --c: var(--bus); grid-column: 1 / -1; }
-.live-card:disabled { cursor: default; }
-.live-card .k { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--c); filter: brightness(1.4); display: flex; align-items: center; gap: 6px; }
-.live-card .n { font-size: clamp(18px, 5vw, 26px); font-weight: 700; text-transform: uppercase; line-height: 1.05; overflow-wrap: anywhere; }
-.live-card .t { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.bar { height: 4px; background: rgba(255, 255, 255, .1); overflow: hidden; }
-.bar i { display: block; height: 100%; width: 0; background: var(--c); filter: brightness(1.3); }
-.live-card .next { font-size: 12px; color: var(--muted); letter-spacing: .04em; }
-.live-card .next b { color: var(--ink); font-weight: 500; text-transform: uppercase; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blood); box-shadow: 0 0 0 0 rgba(255, 84, 38, .7); animation: pulse 1.6s infinite; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 9px rgba(255, 84, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 84, 38, 0); } }
 .offhours { grid-column: 1 / -1; text-align: center; border: 1px dashed var(--line); padding: 14px; color: var(--muted); letter-spacing: .06em; }
@@ -120,7 +104,7 @@ body::before {
 .countdown.days small { font-size: 11px; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 
 /* Stage headers: brush strokes */
-.heads { display: grid; grid-template-columns: var(--rail) 1fr 1fr 1fr var(--rail); gap: 0 var(--gap); align-items: end; }
+.heads { display: grid; grid-template-columns: var(--rail) 1fr 1fr 1fr; gap: 0 var(--gap); align-items: end; }
 .brush { position: relative; height: 62px; display: grid; place-items: center; }
 .brush svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .brush span {
@@ -131,19 +115,19 @@ body::before {
 .brush.bus-head span { font-size: clamp(14px, 4.4vw, 32px); }
 
 /* Timetable grid */
-/* Arcane | Technobus | Station; --col is one stage column, so the time ticks stop at their own stage */
-.tt { --rail: 46px; --gap: 10px; --col: calc((100% - 2 * var(--rail) - 4 * var(--gap)) / 3); display: grid; gap: 6px; }
+/* One time rail on the left, then Arcane | Technobus | Station */
+.tt { --rail: 46px; --gap: 10px; --col: calc((100% - var(--rail) - 3 * var(--gap)) / 3); display: grid; gap: 6px; }
 .grid {
   position: relative;
-  display: grid; grid-template-columns: var(--rail) 1fr 1fr 1fr var(--rail); grid-template-rows: repeat(44, calc(var(--row) / 2));
+  display: grid; grid-template-columns: var(--rail) 1fr 1fr 1fr; grid-template-rows: repeat(44, calc(var(--row) / 2));
   column-gap: var(--gap);
 }
-.tick { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid var(--line); pointer-events: none; }
-.tick.l { left: calc(var(--rail) - 6px); right: calc(100% - var(--rail) - var(--gap) - var(--col)); }
-.tick.r { left: calc(100% - var(--rail) - var(--gap) - var(--col)); right: calc(var(--rail) - 6px); }
+.tick { position: absolute; height: 0; border-top: 1px solid var(--line); pointer-events: none; }
+/* Each time line runs under its own stage only, so it never crosses a name in another column */
+.tick.a { left: calc(var(--rail) - 6px); right: calc(100% - var(--rail) - var(--gap) - var(--col)); }
+.tick.s { left: calc(100% - var(--col)); right: 0; }
 .hl { position: absolute; font-size: 12px; letter-spacing: .04em; color: var(--ink); transform: translateY(-50%); font-variant-numeric: tabular-nums; pointer-events: none; }
 .hl.l { left: 0; }
-.hl.r { right: 0; text-align: right; }
 .slot {
   margin: 4px 0; min-width: 0; position: relative;
   display: grid; place-items: center; text-align: center; padding: 4px 8px;
@@ -156,10 +140,12 @@ body::before {
 .slot[data-stage="arcane"] { --deep: rgba(30, 62, 30, .78); --c: var(--arcane); grid-column: 2; }
 .slot[data-stage="technobus"] { --deep: rgba(80, 38, 10, .78); --c: var(--bus); grid-column: 3; font-size: clamp(11px, 3.2vw, 17px); }
 .slot[data-stage="station"] { --deep: rgba(70, 18, 16, .78); --c: var(--station); grid-column: 4; }
+.slot .rest { font-size: .7em; font-weight: 500; letter-spacing: .02em; color: var(--ink); font-variant-numeric: tabular-nums; text-transform: none; }
+.slot.now .hr { display: none; }
 .slot .hr { font-size: .68em; font-weight: 500; letter-spacing: .02em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .slot small { font-size: .62em; font-weight: 500; }
 .slot:hover { transform: translateY(-1px); }
-.slot:focus-visible, .live-card:focus-visible, .btn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+.slot:focus-visible, .btn:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
 .slot.past { opacity: .4; }
 .slot.now {
   border-color: var(--c); border-width: 2px;
@@ -175,12 +161,11 @@ body::before {
 .slot .star { display: none; position: absolute; top: 4px; left: 6px; font-size: 15px; line-height: 0; color: var(--fav); filter: drop-shadow(0 0 4px rgba(0, 0, 0, .9)); }
 .favbtn { display: inline-flex; align-items: center; gap: 8px; }
 .favbtn .skull { font-size: 18px; }
-.live-card .n .skull { color: var(--fav); margin-right: .25em; }
 .slot.fav .star { display: block; }
 .slot.fav { border: 2px solid var(--fav); box-shadow: 0 0 0 1px color-mix(in srgb, var(--fav) 35%, transparent), 0 0 16px color-mix(in srgb, var(--fav) 45%, transparent), inset 0 0 14px rgba(0, 0, 0, .6); }
 .slot.fav.now { box-shadow: 0 0 0 1px var(--fav), 0 0 26px color-mix(in srgb, var(--fav) 70%, transparent), inset 0 0 14px rgba(0, 0, 0, .4); }
 .slot.fav.past { box-shadow: none; }
-.nowline { position: absolute; left: calc(var(--rail) - 6px); right: calc(var(--rail) - 6px); height: 0; border-top: 2px solid var(--blood); z-index: 3; pointer-events: none; box-shadow: 0 0 10px var(--blood); }
+.nowline { position: absolute; left: calc(var(--rail) - 6px); right: 0; height: 0; border-top: 2px solid var(--blood); z-index: 3; pointer-events: none; box-shadow: 0 0 10px var(--blood); }
 .nowline::before { content: ""; position: absolute; left: -5px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--blood); }
 
 /* Dialog */
@@ -340,7 +325,7 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
   </button>
 
   <div class="view" id="view-timetable" style="display:grid;gap:22px">
-  <section aria-label="En ce moment" style="display:grid;gap:12px">
+  <section aria-label="En ce moment" id="liveSection" style="display:grid;gap:12px">
     <div class="live" id="live"></div>
   </section>
 
@@ -432,18 +417,21 @@ const grid = document.getElementById("grid");
 const rowPx = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--row"));
 function buildGrid() {
   const frag = document.createDocumentFragment();
-  const boundaries = { arcane: new Set(), station: new Set() };
-  slots.forEach(s => { if (boundaries[s.stage]) { boundaries[s.stage].add(s.start); boundaries[s.stage].add(s.end); } });
-  for (const [stage, side] of [["arcane", "l"], ["station", "r"]]) {
-    [...boundaries[stage]].forEach(t => {
-      const pct = offset(t) / SPAN * 100;
+  // Arcane and Station times share the left rail; Technobus times sit in its slots
+  const times = { arcane: new Set(), station: new Set() };
+  slots.forEach(s => { if (times[s.stage]) { times[s.stage].add(s.start); times[s.stage].add(s.end); } });
+  new Set([...times.arcane, ...times.station]).forEach(t => {
+    const pct = offset(t) / SPAN * 100;
+    for (const [stage, cls] of [["arcane", "a"], ["station", "s"]]) {
+      if (!times[stage].has(t)) continue;
       const tick = document.createElement("div");
-      tick.className = `tick ${side}`; tick.style.top = pct + "%";
-      const lab = document.createElement("div");
-      lab.className = `hl ${side}`; lab.style.top = pct + "%"; lab.textContent = t.replace(":", "H");
-      frag.append(tick, lab);
-    });
-  }
+      tick.className = `tick ${cls}`; tick.style.top = pct + "%";
+      frag.append(tick);
+    }
+    const lab = document.createElement("div");
+    lab.className = "hl l"; lab.style.top = pct + "%"; lab.textContent = t.replace(":", "H");
+    frag.append(lab);
+  });
   slots.forEach(s => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "slot"; b.dataset.stage = s.stage; b.dataset.id = s.id;
@@ -484,7 +472,14 @@ function render() {
     el.classList.toggle("past", st === "past");
     el.classList.toggle("fav", isFav(slots[el.dataset.id]));
     if (st === "now") el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current");
+    let rest = el.querySelector(".rest");
+    if (st === "now") {
+      if (!rest) { rest = document.createElement("span"); rest.className = "rest"; el.append(rest); }
+      rest.textContent = `encore ${untilText(slots[el.dataset.id].e - m)}`;
+    } else if (rest) rest.remove();
   });
+  // During the night the grid says it all; the panel above only holds the countdown or the farewell
+  document.getElementById("liveSection").hidden = live(m);
   const line = document.getElementById("nowline");
   line.hidden = !live(m);
   if (live(m)) line.style.top = (m / SPAN * 100) + "%";
@@ -503,30 +498,6 @@ function render() {
     return;
   }
   liveEl.innerHTML = "";
-  for (const stage of Object.keys(STAGES)) {
-    const list = slots.filter(s => s.stage === stage);
-    const cur = list.find(s => m >= s.s && m < s.e);
-    const nxt = list.find(s => s.s > m);
-    const card = document.createElement("button");
-    card.type = "button"; card.className = "live-card"; card.dataset.stage = stage;
-    if (cur) {
-      const pct = (m - cur.s) / (cur.e - cur.s) * 100;
-      card.innerHTML = `
-        <span class="k"><span class="dot"></span>${STAGES[stage]} · en direct</span>
-        <span class="n"></span>
-        <span class="t">Encore ${untilText(cur.e - m)}</span>
-        <span class="bar"><i style="width:${pct.toFixed(1)}%"></i></span>
-        <span class="next">${nxt ? `Ensuite : <b></b> à ${fmt(nxt.start)}` : "Dernier set de la nuit"}</span>`;
-      card.querySelector(".n").textContent = cur.name;
-      if (isFav(cur)) card.querySelector(".n").insertAdjacentHTML("afterbegin", '<svg class="skull" viewBox="0 0 24 24" aria-hidden="true"><use href="#skull"/></svg>');
-      if (nxt) card.querySelector(".next b").textContent = nxt.name;
-      card.addEventListener("click", () => openArtist(cur));
-    } else {
-      card.disabled = true;
-      card.innerHTML = `<span class="k">${STAGES[stage]}</span><span class="n">—</span>`;
-    }
-    liveEl.append(card);
-  }
 }
 
 // Countdown shown while the stages are closed: days included until the festival, then to 18h00.
