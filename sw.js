@@ -1,8 +1,9 @@
 // Keeps the timetable usable offline while picking up new versions as soon as the network allows.
-const CACHE = "walking-bass-v8";
+const CACHE = "walking-bass-v9";
 const ASSETS = [
   "./",
   "index.html",
+  "timetable.js",
   "manifest.webmanifest",
   "fonts/creepster.woff2",
   "fonts/oswald.woff2",
