@@ -249,6 +249,15 @@ dialog::backdrop { background: rgba(0, 0, 0, .65); backdrop-filter: blur(2px); }
 }
 .tabs a[aria-current="page"] { color: #1a0402; background: var(--ink); }
 .tabs a:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+/* The map is hidden until three quick taps on the TECHNOBUS heading turn it on (and off again) */
+body:not(.plan-on) .tabs { display: none; }
+.brush.bus-head { cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 20; transform: translateX(-50%);
+  padding: 9px 16px 8px; border-radius: 999px; background: var(--ink); color: #1a0402;
+  font-size: 14px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .6); pointer-events: none;
+}
 
 /* Plan view: the timetable and the map share this page, the tabs only switch which one shows. */
 body[data-view="plan"] .wrap { max-width: 1100px; }
@@ -388,7 +397,7 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
         <svg viewBox="0 0 200 60" preserveAspectRatio="none"><use href="#brush" fill="#b8231c"/></svg>
         <span>STATION</span>
       </div>
-      <div class="brush bus-head">
+      <div class="brush bus-head" id="busHead">
         <svg viewBox="0 0 200 60" preserveAspectRatio="none"><use href="#brush" fill="#d8641a"/></svg>
         <span>TECHNOBUS</span>
       </div>
@@ -790,8 +799,13 @@ zoom.addEventListener("click", () => {
 // --- views: switching tabs changes the hash only, so the page never reloads ---
 const views = { timetable: document.getElementById("view-timetable"), plan: document.getElementById("view-plan") };
 const TITLES = { timetable: "Walking Bass Timetable", plan: "Walking Bass Plan" };
+// The map stays hidden until it is turned on with three quick taps on the TECHNOBUS heading; kept on this device only.
+const PLAN_KEY = "walking-bass-plan";
+let planOn = false;
+try { planOn = localStorage.getItem(PLAN_KEY) === "1"; } catch (e) {}
+document.body.classList.toggle("plan-on", planOn);
 function showView() {
-  const name = location.hash === "#plan" ? "plan" : "timetable";
+  const name = planOn && location.hash === "#plan" ? "plan" : "timetable";
   for (const [k, el] of Object.entries(views)) el.hidden = k !== name;
   document.querySelectorAll(".tabs a").forEach(a => {
     if (a.dataset.view === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
@@ -801,6 +815,29 @@ function showView() {
 }
 window.addEventListener("hashchange", () => { showView(); window.scrollTo(0, 0); });
 showView();
+
+const toast = document.createElement("div");
+toast.className = "toast"; toast.setAttribute("role", "status"); toast.hidden = true;
+document.body.append(toast);
+let toastTimer;
+function showToast(text) {
+  toast.textContent = text; toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 2200);
+}
+let taps = [];
+document.getElementById("busHead").addEventListener("click", () => {
+  const now = performance.now();
+  taps = taps.filter(t => now - t < 1200).concat(now);
+  if (taps.length < 3) return;
+  taps = [];
+  planOn = !planOn;
+  try { if (planOn) localStorage.setItem(PLAN_KEY, "1"); else localStorage.removeItem(PLAN_KEY); } catch (e) {}
+  document.body.classList.toggle("plan-on", planOn);
+  if (location.hash === "#plan") history.replaceState(null, "", "#timetable");
+  showView();
+  showToast(planOn ? "Plan activé" : "Plan masqué");
+});
 
 buildGrid();
 render();
@@ -820,7 +857,7 @@ if ("serviceWorker" in navigator) {
   });
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(reg => {
-      document.getElementById("offline").textContent = "Prêt pour le hors ligne : la timetable et le plan restent consultables sans réseau.";
+      document.getElementById("offline").textContent = `Prêt pour le hors ligne : la timetable${planOn ? " et le plan restent consultables" : " reste consultable"} sans réseau.`;
       // Installed apps are resumed rather than reopened: look for a new version each time it comes back.
       document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); });
     }).catch(() => {});
