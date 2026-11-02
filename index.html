@@ -341,6 +341,10 @@ body[data-view="plan"] .title { justify-self: center; width: min(100%, 760px); }
 
 /* Footer */
 footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); font-size: 12px; letter-spacing: .06em; text-align: center; }
+.sim { display: grid; gap: 10px; justify-items: center; width: 100%; max-width: 420px; }
+.sim-now { text-transform: uppercase; letter-spacing: .14em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.simrow { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.simrow select, .simrow input { font: inherit; font-size: 15px; color: var(--ink); background: #151815; border: 1px solid var(--line); padding: 6px 8px; border-radius: 4px; }
 [hidden] { display: none !important; }
 
 @media (max-width: 420px) {
@@ -434,6 +438,17 @@ footer { display: grid; gap: 10px; justify-items: center; color: var(--muted); f
   </div>
 
   <footer>
+    <div class="sim" role="group" aria-label="Heure simulée">
+      <div class="sim-now" id="simNow"></div>
+      <div class="simrow">
+        <select id="simDay" aria-label="Jour simulé">
+          <option value="2026-10-30">Vendredi 30 octobre</option>
+          <option value="2026-10-31">Samedi 31 octobre</option>
+          <option value="2026-11-01">Dimanche 1er novembre</option>
+        </select>
+        <input id="simTime" type="time" step="60" aria-label="Heure simulée">
+      </div>
+    </div>
     <div id="offline">Consultable hors ligne une fois installée.</div>
   </footer>
 </div>
@@ -547,16 +562,19 @@ const offset = hhmm => { const [h, m] = hhmm.split(":").map(Number); return ((h 
 const fmt = hhmm => hhmm.replace(":", "h");
 const slots = SLOTS.map(([stage, name, start, end], i) => ({ id: i, stage, name, start, end, s: offset(start), e: offset(end) }));
 
-// --- time source: the device clock ---
+// --- time source: a simulated clock for the archive, it starts at SIM_START and keeps running ---
+const SIM_START = new Date(2026, 9, 31, 17, 58);
+let simShift = SIM_START - Date.now();
+const simNow = () => Date.now() + simShift;
 function nowMinutes() {
-  const d = new Date();
+  const d = new Date(simNow());
   return offset(`${d.getHours()}:${d.getMinutes()}`) + d.getSeconds() / 60;
 }
 // Live only during the festival night itself; before and after, the panel shows a countdown or a farewell.
 const OPENING = new Date(2026, 9, 31, 18, 0);
 const CLOSING = new Date(2026, 10, 1, 5, 0);
-const beforeOpening = () => Date.now() < OPENING;
-const afterClosing = () => Date.now() >= CLOSING;
+const beforeOpening = () => simNow() < OPENING;
+const afterClosing = () => simNow() >= CLOSING;
 const live = m => !beforeOpening() && !afterClosing() && m >= 0 && m < SPAN;
 const status = (slot, m) => !live(m) ? "off" : m >= slot.e ? "past" : m >= slot.s ? "now" : "next";
 
@@ -710,7 +728,7 @@ function tickCountdown() {
   const early = beforeOpening();
   el.classList.toggle("days", early);
   if (early) {
-    const secs = Math.ceil((OPENING - Date.now()) / 1000);
+    const secs = Math.ceil((OPENING - simNow()) / 1000);
     const parts = [[Math.floor(secs / 86400), "jours"], [Math.floor(secs / 3600) % 24, "heures"], [Math.floor(secs / 60) % 60, "min"], [secs % 60, "sec"]];
     el.innerHTML = parts.map(([n, u]) => `<span>${pad(n)}<small>${u}</small></span>`).join("");
     return;
@@ -839,10 +857,36 @@ document.getElementById("busHead").addEventListener("click", () => {
   showToast(planOn ? "Plan activé" : "Plan masqué");
 });
 
+// --- time simulation (footer) ---
+const simDay = document.getElementById("simDay");
+const simTime = document.getElementById("simTime");
+const pad2 = n => String(n).padStart(2, "0");
+function syncSimFields() {
+  const d = new Date(simNow());
+  simDay.value = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  simTime.value = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+function showSimNow() {
+  const text = new Date(simNow()).toLocaleString("fr-FR", { weekday: "long", hour: "2-digit", minute: "2-digit" }).replace(":", "h").replace(" à ", " ");
+  document.getElementById("simNow").textContent = `Heure simulée : ${text}`;
+  // The fields follow the running clock, except while someone is picking a value
+  if (document.activeElement !== simDay && document.activeElement !== simTime) syncSimFields();
+}
+function setSim() {
+  if (!simDay.value || !simTime.value) return;
+  simShift = new Date(`${simDay.value}T${simTime.value}`) - Date.now();
+  showSimNow();
+  render();
+}
+simDay.addEventListener("change", setSim);
+simTime.addEventListener("change", setSim);
+showSimNow();
+
 buildGrid();
 render();
 setInterval(render, 20000);
 setInterval(tickCountdown, 1000);
+setInterval(showSimNow, 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
 
 // --- PWA: offline cache + install prompt ---
@@ -897,7 +941,5 @@ installBtn.addEventListener("click", async () => {
 });
 howto.addEventListener("click", e => { if (e.target === howto) howto.close(); });
 </script>
-<!-- Cloudflare Web Analytics: cookie-free visit counts; offline the beacon just fails to load -->
-<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "1567d24c2cf840c4ae4d87d87ac2f50b"}'></script>
 </body>
 </html>

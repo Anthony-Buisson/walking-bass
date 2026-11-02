@@ -1,5 +1,7 @@
 # The Walking Bass · The Last Raver
 
+**Branche `archive-vps` :** copie de la version publique pour garder le site après la soirée. L'horloge simulée démarre le samedi 31 octobre à 17h58 (`SIM_START` dans `index.html`) et continue de tourner ; le pied de page permet de choisir un autre jour et une autre heure. Pas de Web Analytics sur cette copie. La branche `main` n'est pas concernée.
+
 Timetable des scènes Arcane, Station et Technobus (31 octobre, 18h00 – 05h00), installable comme appli et consultable hors ligne.
 
 - Avant le samedi 31 octobre 18h00 : compte à rebours en jours, heures, minutes et secondes, sans direct.
