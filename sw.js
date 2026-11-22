@@ -1,5 +1,5 @@
 // Keeps the timetable usable offline while picking up new versions as soon as the network allows.
-const CACHE = "walking-bass-v10";
+const CACHE = "walking-bass-v11";
 const ASSETS = [
   "./",
   "index.html",
